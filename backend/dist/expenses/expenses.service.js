@@ -13,6 +13,7 @@ exports.ExpensesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const exchange_rates_service_1 = require("../exchange-rates/exchange-rates.service");
+const client_1 = require("@prisma/client");
 const tesseract_js_1 = require("tesseract.js");
 let ExpensesService = class ExpensesService {
     constructor(prisma, exchangeRatesService) {
@@ -33,7 +34,7 @@ let ExpensesService = class ExpensesService {
                 company_id: company.id,
                 converted_amount: convertedAmount,
                 date: new Date(dto.date),
-                status: isDraft ? 'DRAFT' : 'PENDING',
+                status: isDraft ? client_1.ExpenseStatus.DRAFT : client_1.ExpenseStatus.PENDING,
             },
         });
         if (!isDraft) {
@@ -61,11 +62,20 @@ let ExpensesService = class ExpensesService {
                     for (const flow of flows) {
                         let approverId = null;
                         if (flow.is_manager_approver) {
-                            const manager = await tx.user.findFirst({
-                                where: { company_id: company.id, role: 'MANAGER' },
+                            const managerRelation = await tx.managerRelation.findFirst({
+                                where: { employee_id: employeeId },
+                                include: { manager: true },
                             });
-                            if (manager)
-                                approverId = manager.id;
+                            if (managerRelation && managerRelation.manager) {
+                                approverId = managerRelation.manager.id;
+                            }
+                            else {
+                                const admin = await tx.user.findFirst({
+                                    where: { company_id: company.id, role: 'ADMIN' },
+                                });
+                                if (admin)
+                                    approverId = admin.id;
+                            }
                         }
                         else if (flow.specific_user_id) {
                             approverId = flow.specific_user_id;

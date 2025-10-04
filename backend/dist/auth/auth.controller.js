@@ -21,9 +21,11 @@ const signup_dto_1 = require("./dto/signup.dto");
 const public_decorator_1 = require("./decorators/public.decorator");
 const user_decorator_1 = require("./decorators/user.decorator");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const prisma_service_1 = require("../prisma/prisma.service");
 let AuthController = class AuthController {
-    constructor(authService) {
+    constructor(authService, prisma) {
         this.authService = authService;
+        this.prisma = prisma;
     }
     async signup(signupDto) {
         return this.authService.signup(signupDto);
@@ -33,6 +35,34 @@ let AuthController = class AuthController {
     }
     async changePassword(user, changePasswordDto) {
         return this.authService.changePassword(user.id, changePasswordDto);
+    }
+    async debugUsers() {
+        const users = await this.prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                is_active: true,
+                is_temp_password: true,
+                password_hash: true,
+                created_at: true,
+                company: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+        return {
+            message: 'DEBUG: All users in database',
+            users: users.map(user => ({
+                ...user,
+                password_hash: user.password_hash ? `${user.password_hash.substring(0, 10)}...` : null,
+            })),
+            total: users.length,
+        };
     }
 };
 exports.AuthController = AuthController;
@@ -64,8 +94,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, change_password_dto_1.ChangePasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "changePassword", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('debug/users'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "debugUsers", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        prisma_service_1.PrismaService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

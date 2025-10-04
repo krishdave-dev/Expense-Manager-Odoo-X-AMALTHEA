@@ -193,15 +193,23 @@ let AuthService = class AuthService {
                 updated_at: new Date(),
             },
         });
-        await this.prisma.approvalFlow.create({
-            data: {
+        const existingApprovalFlow = await this.prisma.approvalFlow.findFirst({
+            where: {
                 company_id: user.company_id,
                 step_order: 1,
-                approver_role: 'ADMIN',
-                specific_user_id: user.id,
-                is_manager_approver: false,
             },
         });
+        if (!existingApprovalFlow) {
+            await this.prisma.approvalFlow.create({
+                data: {
+                    company_id: user.company_id,
+                    step_order: 1,
+                    approver_role: 'ADMIN',
+                    specific_user_id: user.id,
+                    is_manager_approver: false,
+                },
+            });
+        }
         return {
             message: 'Password changed successfully',
         };

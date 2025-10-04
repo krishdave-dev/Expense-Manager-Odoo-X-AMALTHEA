@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
+import { ExpenseStatus } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createWorker } from 'tesseract.js';
@@ -34,7 +35,7 @@ export class ExpensesService {
         company_id: company.id,
         converted_amount: convertedAmount,
         date: new Date(dto.date),
-        status: isDraft ? 'DRAFT' : 'PENDING',
+        status: isDraft ? ExpenseStatus.DRAFT : ExpenseStatus.PENDING,
       },
     });
 
@@ -68,11 +69,21 @@ export class ExpensesService {
           let approverId: number | null = null;
 
           if (flow.is_manager_approver) {
-            // For now, assume employee's manager = company admin (simplified)
-            const manager = await tx.user.findFirst({
-              where: { company_id: company.id, role: 'MANAGER' },
+            // Find the employee's assigned manager through ManagerRelation
+            const managerRelation = await tx.managerRelation.findFirst({
+              where: { employee_id: employeeId },
+              include: { manager: true },
             });
-            if (manager) approverId = manager.id;
+            
+            if (managerRelation && managerRelation.manager) {
+              approverId = managerRelation.manager.id;
+            } else {
+              // Fallback to any admin if no manager is assigned
+              const admin = await tx.user.findFirst({
+                where: { company_id: company.id, role: 'ADMIN' },
+              });
+              if (admin) approverId = admin.id;
+            }
           } else if (flow.specific_user_id) {
             approverId = flow.specific_user_id;
           } else {
