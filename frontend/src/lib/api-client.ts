@@ -155,6 +155,10 @@ class ApiClient {
     return this.request('/users/profile');
   }
 
+  async getCompanyInfo(): Promise<Company> {
+    return this.request('/users/company');
+  }
+
   async updateUserStatus(userId: number, isActive: boolean): Promise<{ 
     message: string; 
     user: User; 
@@ -331,6 +335,32 @@ class ApiClient {
     });
   }
 
+  // Manager Approval Methods
+  async getPendingApprovals(): Promise<any[]> {
+    return this.request('/approvals/pending');
+  }
+
+  async approveExpense(expenseId: number, status: 'APPROVED' | 'REJECTED', comments?: string): Promise<{
+    success: boolean;
+    newStatus: string;
+  }> {
+    return this.request(`/approvals/${expenseId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ status, comments }),
+    });
+  }
+
+  async getTeamExpenses(): Promise<{
+    expenses: any[];
+    total: number;
+  }> {
+    return this.request('/expenses/team');
+  }
+
+  async getManagerDebugInfo(): Promise<any> {
+    return this.request('/expenses/debug/manager-info');
+  }
+
   // Approval Flow Management
   async getApprovalFlows(): Promise<any[]> {
     return this.request('/approvals/flows');
@@ -399,6 +429,29 @@ class ApiClient {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token');
     }
+  }
+
+  // Exchange Rate / Currency Methods
+  async getSupportedCurrencies(): Promise<Array<{
+    code: string;
+    name: string;
+    symbol?: string;
+  }>> {
+    return this.request('/exchange-rates/currencies');
+  }
+
+  async getExchangeRates(baseCurrency: string): Promise<{ [key: string]: number }> {
+    return this.request(`/exchange-rates/rates?base=${baseCurrency}`);
+  }
+
+  async convertCurrency(amount: number, from: string, to: string): Promise<{
+    originalAmount: number;
+    convertedAmount: number;
+    exchangeRate: number;
+    fromCurrency: string;
+    toCurrency: string;
+  }> {
+    return this.request(`/exchange-rates/convert?amount=${amount}&from=${from}&to=${to}`);
   }
 }
 

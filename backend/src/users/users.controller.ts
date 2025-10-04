@@ -43,6 +43,14 @@ export class UsersController {
   }
 
   /**
+   * Get company information for current user
+   */
+  @Get('company')
+  async getCompanyInfo(@CurrentUser() user: any) {
+    return this.usersService.getCompanyInfo(user.id);
+  }
+
+  /**
    * Update user status (Admin only)
    */
   @Patch(':id/status')

@@ -16,16 +16,33 @@ export class ExpensesService {
   ) {}
 
   async createExpense(employeeId: number, dto: CreateExpenseDto, isDraft: boolean = false) {
-    const employee = await this.prisma.user.findUnique({ where: { id: employeeId } });
-    const company = await this.prisma.company.findUnique({ where: { id: employee.company_id } });
+    const employee = await this.prisma.user.findUnique({ 
+      where: { id: employeeId },
+      include: { company: true }
+    });
 
-    let convertedAmount = dto.amount;
+    if (!employee || !employee.company) {
+      throw new Error('Employee or company not found');
+    }
+
+    const company = employee.company;
+
+    // Use enhanced currency conversion with validation
+    let conversionResult;
     if (dto.currency_code !== company.currency_code) {
-      convertedAmount = await this.exchangeRatesService.convertAmount(
+      conversionResult = await this.exchangeRatesService.convertAmountWithValidation(
         dto.amount,
         dto.currency_code,
         company.currency_code,
       );
+    } else {
+      conversionResult = {
+        originalAmount: dto.amount,
+        convertedAmount: dto.amount,
+        exchangeRate: 1,
+        fromCurrency: dto.currency_code,
+        toCurrency: company.currency_code,
+      };
     }
 
     const expense = await this.prisma.expense.create({
@@ -33,9 +50,9 @@ export class ExpensesService {
         ...dto,
         employee_id: employeeId,
         company_id: company.id,
-        converted_amount: convertedAmount,
+        converted_amount: conversionResult.convertedAmount,
         date: new Date(dto.date),
-        status: isDraft ? ExpenseStatus.DRAFT : ExpenseStatus.PENDING,
+        status: isDraft ? 'DRAFT' : 'PENDING',
       },
     });
 

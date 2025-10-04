@@ -204,6 +204,40 @@ export class UsersService {
   }
 
   /**
+   * Get company information for user
+   */
+  async getCompanyInfo(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+            country: true,
+            currency_code: true,
+            currency_symbol: true,
+          },
+        },
+      },
+    });
+
+    if (!user || !user.company) {
+      throw new NotFoundException('User or company not found');
+    }
+
+    return {
+      id: user.company.id,
+      name: user.company.name,
+      country: user.company.country,
+      currency: {
+        code: user.company.currency_code,
+        symbol: user.company.currency_symbol,
+      },
+    };
+  }
+
+  /**
    * Update user status (Admin only)
    */
   async updateUserStatus(adminUserId: number, targetUserId: number, isActive: boolean) {

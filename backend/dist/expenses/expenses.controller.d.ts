@@ -185,15 +185,15 @@ export declare class ExpensesController {
             employeeId: number;
             employee: {
                 id: number;
-                name: string;
                 email: string;
+                name: string;
                 role: import(".prisma/client").$Enums.Role;
             };
         }[];
         allCompanyEmployees: {
             id: number;
-            name: string;
             email: string;
+            name: string;
             role: import(".prisma/client").$Enums.Role;
         }[];
         recentExpenses: {

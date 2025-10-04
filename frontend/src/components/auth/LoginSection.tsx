@@ -74,6 +74,7 @@ export default function LoginSection() {
           setIsChangingPassword(true);
         } else {
           // Login successful, redirect based on user role
+          // Use the user data returned from the login result
           const loggedUser = (result as any).user;
           if (loggedUser?.role === 'ADMIN') {
             router.push('/admin');

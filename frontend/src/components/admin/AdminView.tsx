@@ -413,24 +413,7 @@ export default function AdminView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user.name}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" onClick={logout}>
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div>
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Success Message */}
@@ -721,11 +704,11 @@ export default function AdminView() {
                       <TableCell className="max-w-xs truncate">{expense.description || 'N/A'}</TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {expense.company.currencySymbol}{expense.amount}
+                          {expense.company.currencySymbol}{expense.convertedAmount || expense.amount}
                         </div>
                         {expense.currencyCode !== expense.company.currencyCode && (
                           <div className="text-sm text-gray-500">
-                            {expense.currencyCode} {expense.amount}
+                            Original: {expense.currencyCode} {expense.amount}
                           </div>
                         )}
                       </TableCell>

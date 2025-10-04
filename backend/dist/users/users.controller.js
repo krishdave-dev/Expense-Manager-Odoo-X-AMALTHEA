@@ -35,6 +35,9 @@ let UsersController = class UsersController {
     async getUserProfile(user) {
         return this.usersService.getUserProfile(user.id);
     }
+    async getCompanyInfo(user) {
+        return this.usersService.getCompanyInfo(user.id);
+    }
     async updateUserStatus(user, targetUserId, isActive) {
         return this.usersService.updateUserStatus(user.id, targetUserId, isActive);
     }
@@ -79,6 +82,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getUserProfile", null);
+__decorate([
+    (0, common_1.Get)('company'),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getCompanyInfo", null);
 __decorate([
     (0, common_1.Patch)(':id/status'),
     (0, roles_decorators_1.Roles)(client_1.Role.ADMIN),

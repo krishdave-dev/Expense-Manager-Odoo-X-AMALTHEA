@@ -89,12 +89,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    // Clear auth state
     apiClient.removeAuthToken();
     setUser(null);
     setCompany(null);
     
-    // Redirect to login page
+    // Clear any cached data
     if (typeof window !== 'undefined') {
+      // Clear localStorage except for essential items
+      const keysToKeep = ['theme', 'language']; // Add any keys you want to keep
+      const allKeys = Object.keys(localStorage);
+      allKeys.forEach(key => {
+        if (!keysToKeep.includes(key)) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Redirect to login page
       window.location.href = '/login';
     }
   };

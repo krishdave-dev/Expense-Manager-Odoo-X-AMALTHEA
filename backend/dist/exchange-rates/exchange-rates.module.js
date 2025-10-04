@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExchangeRatesModule = void 0;
 const common_1 = require("@nestjs/common");
 const exchange_rates_service_1 = require("./exchange-rates.service");
+const exchange_rates_controller_1 = require("./exchange-rates.controller");
 const prisma_service_1 = require("../prisma/prisma.service");
 const axios_1 = require("@nestjs/axios");
 let ExchangeRatesModule = class ExchangeRatesModule {
@@ -17,6 +18,7 @@ exports.ExchangeRatesModule = ExchangeRatesModule;
 exports.ExchangeRatesModule = ExchangeRatesModule = __decorate([
     (0, common_1.Module)({
         imports: [axios_1.HttpModule],
+        controllers: [exchange_rates_controller_1.ExchangeRatesController],
         providers: [exchange_rates_service_1.ExchangeRatesService, prisma_service_1.PrismaService],
         exports: [exchange_rates_service_1.ExchangeRatesService],
     })

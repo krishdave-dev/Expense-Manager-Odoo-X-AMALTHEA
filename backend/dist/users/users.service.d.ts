@@ -46,30 +46,39 @@ export declare class UsersService {
             createdAt: string;
             updatedAt: string;
             managers: {
-                email: string;
                 name: string;
-                id: number;
+                email: string;
                 role: import(".prisma/client").$Enums.Role;
+                id: number;
             }[];
         }[];
         total: number;
     }>;
     getUserProfile(userId: number): Promise<{
-        company: {
-            name: string;
-            country: string;
-            id: number;
-            currency_code: string;
-            currency_symbol: string;
-        };
-        email: string;
         name: string;
-        id: number;
+        email: string;
         role: import(".prisma/client").$Enums.Role;
         is_active: boolean;
         is_temp_password: boolean;
         created_at: Date;
         updated_at: Date;
+        company: {
+            name: string;
+            id: number;
+            country: string;
+            currency_code: string;
+            currency_symbol: string;
+        };
+        id: number;
+    }>;
+    getCompanyInfo(userId: number): Promise<{
+        id: number;
+        name: string;
+        country: string;
+        currency: {
+            code: string;
+            symbol: string;
+        };
     }>;
     updateUserStatus(adminUserId: number, targetUserId: number, isActive: boolean): Promise<{
         message: string;
@@ -107,16 +116,16 @@ export declare class UsersService {
             employeeId: number;
             managerId: number;
             employee: {
-                email: string;
                 name: string;
-                id: number;
+                email: string;
                 role: import(".prisma/client").$Enums.Role;
+                id: number;
             };
             manager: {
-                email: string;
                 name: string;
-                id: number;
+                email: string;
                 role: import(".prisma/client").$Enums.Role;
+                id: number;
             };
         };
     }>;
@@ -141,10 +150,10 @@ export declare class UsersService {
         employeeId: number;
         managerId: number;
         manager: {
-            email: string;
             name: string;
-            id: number;
+            email: string;
             role: import(".prisma/client").$Enums.Role;
+            id: number;
         };
     }[]>;
     getUserEmployees(requesterId: number, managerId: number): Promise<{
@@ -152,10 +161,10 @@ export declare class UsersService {
         employeeId: number;
         managerId: number;
         employee: {
-            email: string;
             name: string;
-            id: number;
+            email: string;
             role: import(".prisma/client").$Enums.Role;
+            id: number;
         };
     }[]>;
     private generateRandomPassword;

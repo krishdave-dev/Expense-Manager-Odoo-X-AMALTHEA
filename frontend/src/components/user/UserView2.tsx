@@ -138,6 +138,18 @@ export default function ExpenseFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [editingDraftId, setEditingDraftId] = useState<number | null>(null);
+  const [supportedCurrencies, setSupportedCurrencies] = useState<Array<{
+    code: string;
+    name: string;
+    symbol?: string;
+  }>>([]);
+  const [conversionInfo, setConversionInfo] = useState<{
+    convertedAmount: number;
+    exchangeRate: number;
+    fromCurrency: string;
+    toCurrency: string;
+  } | null>(null);
+  const [isLoadingCurrencies, setIsLoadingCurrencies] = useState(true);
   const [formData, setFormData] = useState({
     amount: '',
     currency_code: company?.currency?.code || 'INR',
@@ -198,6 +210,61 @@ export default function ExpenseFormPage() {
       setFormData(prev => ({ ...prev, date: today }));
     }
   }, [formData.date]);
+
+  // Fetch supported currencies
+  useEffect(() => {
+    const fetchSupportedCurrencies = async () => {
+      try {
+        setIsLoadingCurrencies(true);
+        const currencies = await apiClient.getSupportedCurrencies();
+        setSupportedCurrencies(currencies);
+      } catch (error) {
+        console.error('Error fetching currencies:', error);
+        // Fallback to basic currencies if API fails
+        setSupportedCurrencies([
+          { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+          { code: 'USD', name: 'US Dollar', symbol: '$' },
+          { code: 'EUR', name: 'Euro', symbol: '€' },
+          { code: 'GBP', name: 'British Pound', symbol: '£' },
+        ]);
+      } finally {
+        setIsLoadingCurrencies(false);
+      }
+    };
+
+    fetchSupportedCurrencies();
+  }, []);
+
+  // Handle currency conversion when amount or currency changes
+  useEffect(() => {
+    const convertCurrency = async () => {
+      if (
+        formData.amount && 
+        parseFloat(formData.amount) > 0 && 
+        formData.currency_code && 
+        company?.currency?.code &&
+        formData.currency_code !== company.currency.code
+      ) {
+        try {
+          const conversion = await apiClient.convertCurrency(
+            parseFloat(formData.amount),
+            formData.currency_code,
+            company.currency.code
+          );
+          setConversionInfo(conversion);
+        } catch (error) {
+          console.error('Currency conversion failed:', error);
+          setConversionInfo(null);
+        }
+      } else {
+        setConversionInfo(null);
+      }
+    };
+
+    // Debounce the conversion call
+    const timeoutId = setTimeout(convertCurrency, 500);
+    return () => clearTimeout(timeoutId);
+  }, [formData.amount, formData.currency_code, company?.currency?.code]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -343,11 +410,17 @@ export default function ExpenseFormPage() {
                 <h3 className="text-sm font-semibold text-purple-800 mb-2">📋 Expense Preview</h3>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {formData.amount && (
-                    <div>
+                    <div className="col-span-2">
                       <span className="text-gray-600">Amount:</span>{' '}
                       <span className="font-medium text-purple-700">
-                        {company?.currency?.symbol || '₹'}{formData.amount} {formData.currency_code}
+                        {formData.currency_code} {formData.amount}
                       </span>
+                      {conversionInfo && (
+                        <div className="mt-1 text-xs text-gray-500">
+                          Converts to: {company?.currency?.symbol}{conversionInfo.convertedAmount.toFixed(2)} {company?.currency?.code}
+                          <span className="ml-2">(Rate: 1 {conversionInfo.fromCurrency} = {conversionInfo.exchangeRate.toFixed(4)} {conversionInfo.toCurrency})</span>
+                        </div>
+                      )}
                     </div>
                   )}
                   {formData.date && (
@@ -404,10 +477,18 @@ export default function ExpenseFormPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="INR">🇮🇳 INR</SelectItem>
-                      <SelectItem value="USD">🇺🇸 USD</SelectItem>
-                      <SelectItem value="EUR">🇪🇺 EUR</SelectItem>
-                      <SelectItem value="GBP">🇬🇧 GBP</SelectItem>
+                      {isLoadingCurrencies ? (
+                        <div className="flex items-center justify-center py-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="ml-2 text-sm">Loading currencies...</span>
+                        </div>
+                      ) : (
+                        supportedCurrencies.map((currency) => (
+                          <SelectItem key={currency.code} value={currency.code}>
+                            {currency.symbol || currency.code} {currency.code}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

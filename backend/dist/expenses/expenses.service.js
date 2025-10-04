@@ -13,7 +13,6 @@ exports.ExpensesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const exchange_rates_service_1 = require("../exchange-rates/exchange-rates.service");
-const client_1 = require("@prisma/client");
 const tesseract_js_1 = require("tesseract.js");
 let ExpensesService = class ExpensesService {
     constructor(prisma, exchangeRatesService) {
@@ -21,20 +20,35 @@ let ExpensesService = class ExpensesService {
         this.exchangeRatesService = exchangeRatesService;
     }
     async createExpense(employeeId, dto, isDraft = false) {
-        const employee = await this.prisma.user.findUnique({ where: { id: employeeId } });
-        const company = await this.prisma.company.findUnique({ where: { id: employee.company_id } });
-        let convertedAmount = dto.amount;
+        const employee = await this.prisma.user.findUnique({
+            where: { id: employeeId },
+            include: { company: true }
+        });
+        if (!employee || !employee.company) {
+            throw new Error('Employee or company not found');
+        }
+        const company = employee.company;
+        let conversionResult;
         if (dto.currency_code !== company.currency_code) {
-            convertedAmount = await this.exchangeRatesService.convertAmount(dto.amount, dto.currency_code, company.currency_code);
+            conversionResult = await this.exchangeRatesService.convertAmountWithValidation(dto.amount, dto.currency_code, company.currency_code);
+        }
+        else {
+            conversionResult = {
+                originalAmount: dto.amount,
+                convertedAmount: dto.amount,
+                exchangeRate: 1,
+                fromCurrency: dto.currency_code,
+                toCurrency: company.currency_code,
+            };
         }
         const expense = await this.prisma.expense.create({
             data: {
                 ...dto,
                 employee_id: employeeId,
                 company_id: company.id,
-                converted_amount: convertedAmount,
+                converted_amount: conversionResult.convertedAmount,
                 date: new Date(dto.date),
-                status: isDraft ? client_1.ExpenseStatus.DRAFT : client_1.ExpenseStatus.PENDING,
+                status: isDraft ? 'DRAFT' : 'PENDING',
             },
         });
         if (!isDraft) {
