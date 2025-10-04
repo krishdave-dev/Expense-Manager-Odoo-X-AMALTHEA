@@ -13,7 +13,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Upload,
   Plus,
   ArrowLeft,
   ArrowRight,
@@ -129,7 +128,7 @@ export default function UserView() {
       case "Waiting Approval":
         return "text-yellow-600 bg-yellow-50 border-yellow-200";
       case "Submitted":
-        return "text-purple-600 bg-purple-50 border-blue-200";
+        return "text-purple-600 bg-purple-50 border-purple-200";
       case "Draft":
         return "text-gray-600 bg-gray-50 border-gray-200";
       default:
