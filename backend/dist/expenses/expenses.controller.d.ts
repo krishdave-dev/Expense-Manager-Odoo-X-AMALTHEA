@@ -4,15 +4,15 @@ export declare class ExpensesController {
     private expensesService;
     constructor(expensesService: ExpensesService);
     create(dto: CreateExpenseDto, req: any): Promise<{
-        currency_code: string;
-        created_at: Date;
-        updated_at: Date;
+        date: Date;
         id: number;
         company_id: number;
+        created_at: Date;
+        updated_at: Date;
+        currency_code: string;
         amount: import("@prisma/client/runtime/library").Decimal;
         category: string | null;
         description: string | null;
-        date: Date;
         converted_amount: import("@prisma/client/runtime/library").Decimal | null;
         status: import(".prisma/client").$Enums.ExpenseStatus;
         employee_id: number;
@@ -20,10 +20,17 @@ export declare class ExpensesController {
     getMy(req: any): Promise<({
         company: {
             name: string;
+            id: number;
             currency_code: string;
             currency_symbol: string;
-            id: number;
         };
+        attachments: {
+            id: number;
+            created_at: Date;
+            expense_id: number;
+            file_url: string | null;
+            ocr_data: import("@prisma/client/runtime/library").JsonValue | null;
+        }[];
         approvals: ({
             approver: {
                 email: string;
@@ -32,9 +39,9 @@ export declare class ExpensesController {
                 role: import(".prisma/client").$Enums.Role;
             };
         } & {
+            id: number;
             created_at: Date;
             updated_at: Date;
-            id: number;
             status: import(".prisma/client").$Enums.ApprovalStatus;
             step_order: number | null;
             comments: string | null;
@@ -47,23 +54,16 @@ export declare class ExpensesController {
             name: string;
             id: number;
         };
-        attachments: {
-            created_at: Date;
-            id: number;
-            expense_id: number;
-            file_url: string | null;
-            ocr_data: import("@prisma/client/runtime/library").JsonValue | null;
-        }[];
     } & {
-        currency_code: string;
-        created_at: Date;
-        updated_at: Date;
+        date: Date;
         id: number;
         company_id: number;
+        created_at: Date;
+        updated_at: Date;
+        currency_code: string;
         amount: import("@prisma/client/runtime/library").Decimal;
         category: string | null;
         description: string | null;
-        date: Date;
         converted_amount: import("@prisma/client/runtime/library").Decimal | null;
         status: import(".prisma/client").$Enums.ExpenseStatus;
         employee_id: number;

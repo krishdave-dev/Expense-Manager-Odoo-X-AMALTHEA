@@ -12,41 +12,42 @@ export declare class ApprovalsController {
             company: {
                 name: string;
                 country: string | null;
-                currency_code: string;
-                currency_symbol: string | null;
+                id: number;
                 created_at: Date;
                 updated_at: Date;
-                id: number;
+                currency_code: string;
+                currency_symbol: string | null;
             };
             employee: {
                 email: string;
                 name: string;
-                created_at: Date;
-                updated_at: Date;
                 id: number;
+                company_id: number;
                 password_hash: string;
                 role: import(".prisma/client").$Enums.Role;
                 is_active: boolean;
-                company_id: number;
+                is_temp_password: boolean;
+                created_at: Date;
+                updated_at: Date;
             };
         } & {
-            currency_code: string;
-            created_at: Date;
-            updated_at: Date;
+            date: Date;
             id: number;
             company_id: number;
+            created_at: Date;
+            updated_at: Date;
+            currency_code: string;
             amount: import("@prisma/client/runtime/library").Decimal;
             category: string | null;
             description: string | null;
-            date: Date;
             converted_amount: import("@prisma/client/runtime/library").Decimal | null;
             status: import(".prisma/client").$Enums.ExpenseStatus;
             employee_id: number;
         };
     } & {
+        id: number;
         created_at: Date;
         updated_at: Date;
-        id: number;
         status: import(".prisma/client").$Enums.ApprovalStatus;
         step_order: number | null;
         comments: string | null;

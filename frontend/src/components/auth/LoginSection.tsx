@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,13 +21,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Eye, EyeOff, Mail, Lock, AlertTriangle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, AlertTriangle, Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 export default function LoginSection() {
+  const router = useRouter();
+  const { login, changePassword, isLoading } = useAuth();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -50,72 +56,63 @@ export default function LoginSection() {
     });
   };
 
-  const isTemporaryPassword = (email: string, password: string) => {
-    const tempPasswordData = localStorage.getItem("tempPassword");
-    if (!tempPasswordData) return false;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!formData.email || !formData.password) {
+      setError("Please fill in all fields");
+      return;
+    }
 
     try {
-      const tempData = JSON.parse(tempPasswordData);
-      const isValid =
-        tempData.email === email &&
-        tempData.password === password &&
-        !tempData.used &&
-        Date.now() - tempData.timestamp < 24 * 60 * 60 * 1000; // 24 hours
-      return { isValid, tempData };
-    } catch {
-      return false;
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        if (result.needsPasswordChange) {
+          // User has temporary password, show change password dialog
+          setIsChangingPassword(true);
+        } else {
+          // Login successful, redirect to dashboard
+          router.push('/admin');
+        }
+      } else {
+        setError(result.error || "Login failed");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Check if this is a temporary password
-    const tempCheck = isTemporaryPassword(formData.email, formData.password);
-
-    if (tempCheck && tempCheck.isValid) {
-      // This is a valid temporary password, prompt for new password
-      setIsChangingPassword(true);
-    } else {
-      // Handle normal login logic here
-      console.log("Login data:", formData);
-      // In a real app, you would authenticate with backend
-    }
-  };
-
-  const handlePasswordChange = (e: React.FormEvent) => {
-    e.preventDefault();
+    setError("");
 
     if (newPasswordData.newPassword !== newPasswordData.confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
 
     if (newPasswordData.newPassword.length < 6) {
-      alert("Password must be at least 6 characters long!");
+      setError("Password must be at least 6 characters long!");
       return;
     }
 
-    // Mark temporary password as used
-    const tempPasswordData = localStorage.getItem("tempPassword");
-    if (tempPasswordData) {
-      const tempData = JSON.parse(tempPasswordData);
-      tempData.used = true;
-      localStorage.setItem("tempPassword", JSON.stringify(tempData));
+    try {
+      const result = await changePassword(formData.password, newPasswordData.newPassword);
+      
+      if (result.success) {
+        // Password changed successfully, redirect to dashboard
+        setIsChangingPassword(false);
+        setFormData({ email: "", password: "" });
+        setNewPasswordData({ newPassword: "", confirmPassword: "" });
+        router.push('/admin');
+      } else {
+        setError(result.error || "Password change failed");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
     }
-
-    // Update password (in real app, send to backend)
-    console.log("Password changed for:", formData.email);
-    console.log("New password:", newPasswordData.newPassword);
-
-    // Reset states
-    setIsChangingPassword(false);
-    setFormData({ email: "", password: "" });
-    setNewPasswordData({ newPassword: "", confirmPassword: "" });
-
-    alert(
-      "Password changed successfully! You can now log in with your new password."
-    );
   };
 
   return (
@@ -132,6 +129,12 @@ export default function LoginSection() {
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Email</label>
               <div className="relative">
@@ -144,6 +147,7 @@ export default function LoginSection() {
                   onChange={handleInputChange}
                   className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -162,6 +166,7 @@ export default function LoginSection() {
                   onChange={handleInputChange}
                   className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -190,9 +195,17 @@ export default function LoginSection() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+              disabled={isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
 
             <p className="text-center text-sm text-gray-600">
@@ -224,6 +237,12 @@ export default function LoginSection() {
 
           <form onSubmit={handlePasswordChange}>
             <div className="space-y-4 py-4">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
                   New Password
@@ -239,6 +258,7 @@ export default function LoginSection() {
                     className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                     required
                     minLength={6}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -269,6 +289,7 @@ export default function LoginSection() {
                     className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                     required
                     minLength={6}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -295,9 +316,17 @@ export default function LoginSection() {
             <DialogFooter>
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+                disabled={isLoading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Update Password
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating Password...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
               </Button>
             </DialogFooter>
           </form>

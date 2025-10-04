@@ -12,19 +12,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RolesGuard = void 0;
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
+const roles_decorators_1 = require("../decorators/roles.decorators");
 let RolesGuard = class RolesGuard {
     constructor(reflector) {
         this.reflector = reflector;
     }
     canActivate(context) {
-        const requiredRoles = this.reflector.getAllAndOverride('roles', [
+        const requiredRoles = this.reflector.getAllAndOverride(roles_decorators_1.ROLES_KEY, [
             context.getHandler(),
             context.getClass(),
         ]);
-        if (!requiredRoles)
+        if (!requiredRoles) {
             return true;
+        }
         const { user } = context.switchToHttp().getRequest();
-        return requiredRoles.some((role) => user.role === role);
+        if (!user) {
+            throw new common_1.ForbiddenException('Access denied');
+        }
+        const hasRole = requiredRoles.some((role) => user.role === role);
+        if (!hasRole) {
+            throw new common_1.ForbiddenException('Insufficient permissions');
+        }
+        return true;
     }
 };
 exports.RolesGuard = RolesGuard;

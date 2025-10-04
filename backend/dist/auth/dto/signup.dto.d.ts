@@ -1,6 +1,6 @@
 export declare class SignupDto {
+    name: string;
     email: string;
     password: string;
-    name: string;
     country: string;
 }

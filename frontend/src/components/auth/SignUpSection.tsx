@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,7 +22,10 @@ import {
   Globe,
   Search,
   ChevronDown,
+  Loader2,
+  CheckCircle,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 interface Country {
   name: {
@@ -46,6 +50,9 @@ interface SelectedCountry {
 }
 
 export default function SignUpSection() {
+  const router = useRouter();
+  const { signup, isLoading: authLoading } = useAuth();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
@@ -53,6 +60,8 @@ export default function SignUpSection() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -171,27 +180,58 @@ export default function SignUpSection() {
     setIsDropdownOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setSuccess(false);
+
+    // Validation
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError("Please fill in all fields");
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
       return;
     }
 
     if (!formData.country) {
-      alert("Please select a country!");
+      setError("Please select a country!");
       return;
     }
 
-    // Handle signup logic here
-    console.log("Signup data:", {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      country: formData.country,
-      baseCurrency: formData.country.currency,
-    });
+    try {
+      const result = await signup(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.country.name
+      );
+
+      if (result.success) {
+        setSuccess(true);
+        // Set currency in localStorage for later use
+        localStorage.setItem(
+          "baseCurrency",
+          JSON.stringify(formData.country.currency)
+        );
+        
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      } else {
+        setError(result.error || "Signup failed");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+    }
   };
 
   return (
@@ -205,25 +245,46 @@ export default function SignUpSection() {
         </CardDescription>
       </CardHeader>
 
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Full Name
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                name="name"
-                type="text"
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
+      {success ? (
+        <CardContent className="text-center py-12">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Account Created Successfully!
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Your company and admin account have been created. You can now log in to start managing expenses.
+          </p>
+          <div className="text-sm text-gray-500">
+            Redirecting to login page...
           </div>
+        </CardContent>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  name="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  required
+                  disabled={authLoading}
+                />
+              </div>
+            </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Email</label>
@@ -237,6 +298,7 @@ export default function SignUpSection() {
                 onChange={handleInputChange}
                 className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 required
+                disabled={authLoading}
               />
             </div>
           </div>
@@ -255,6 +317,7 @@ export default function SignUpSection() {
                 onChange={handleInputChange}
                 className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 required
+                disabled={authLoading}
               />
               <button
                 type="button"
@@ -284,6 +347,7 @@ export default function SignUpSection() {
                 onChange={handleInputChange}
                 className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 required
+                disabled={authLoading}
               />
               <button
                 type="button"
@@ -383,9 +447,17 @@ export default function SignUpSection() {
         <CardFooter className="flex flex-col my-4">
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+            disabled={authLoading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Account
+            {authLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating Account...
+              </>
+            ) : (
+              "Create Account"
+            )}
           </Button>
 
           <p className="text-center text-sm text-gray-600">
@@ -398,7 +470,8 @@ export default function SignUpSection() {
             </Link>
           </p>
         </CardFooter>
-      </form>
+        </form>
+      )}
     </Card>
   );
 }
