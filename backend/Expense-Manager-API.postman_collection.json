@@ -1,0 +1,78 @@
+{
+  "info": {
+    "name": "Expense Manager API",
+    "description": "API collection for Expense Manager backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@company.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\",\n  \"country\": \"United States\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/auth/signup",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["auth", "signup"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expenses",
+      "item": [
+        {
+          "name": "Create Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.50,\n  \"currency_code\": \"USD\",\n  \"category\": \"Travel\",\n  \"description\": \"Business trip taxi fare\",\n  \"date\": \"2024-10-04\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/expenses",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["expenses"]
+            }
+          }
+        },
+        {
+          "name": "Get My Expenses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/expenses/my",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["expenses", "my"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
