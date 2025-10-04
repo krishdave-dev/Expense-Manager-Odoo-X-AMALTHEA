@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id               Int       @id @default(autoincrement())
+  name             String    @db.VarChar(150)
+  country          String?   @db.VarChar(100)
+  currency_code    String    @db.VarChar(10)
+  currency_symbol  String?   @db.VarChar(10)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  users            User[]
+  approvalFlows    ApprovalFlow[]
+  approvalRules    ApprovalRule[]
+  expenses         Expense[]
+  activityLogs     ActivityLog[]
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  company_id    Int
+  name          String    @db.VarChar(150)
+  email         String    @unique @db.VarChar(150)
+  password_hash String    @db.Text
+  role          Role
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  company       Company   @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  managedEmployees ManagerRelation[] @relation("Manager")
+  managers       ManagerRelation[] @relation("Employee")
+  submittedExpenses Expense[]
+  approvals      ExpenseApproval[]
+  specificApprovalFlows ApprovalFlow[]
+  specificApprovalRules ApprovalRule[]
+  activityLogs   ActivityLog[]
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+model ManagerRelation {
+  id          Int   @id @default(autoincrement())
+  employee_id Int
+  manager_id  Int
+
+  employee    User  @relation("Employee", fields: [employee_id], references: [id], onDelete: Cascade)
+  manager     User  @relation("Manager", fields: [manager_id], references: [id], onDelete: Cascade)
+
+  @@unique([employee_id, manager_id])
+}
+
+model Expense {
+  id               Int       @id @default(autoincrement())
+  employee_id      Int
+  company_id       Int
+  category         String?   @db.VarChar(100)
+  description      String?   @db.Text
+  amount           Decimal   @db.Decimal(12, 2)
+  currency_code    String    @db.VarChar(10)
+  converted_amount Decimal?  @db.Decimal(12, 2)
+  date             DateTime  @db.Date
+  status           ExpenseStatus @default(PENDING)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  employee         User      @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+  company          Company   @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  attachments      ExpenseAttachment[]
+  approvals        ExpenseApproval[]
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ExpenseAttachment {
+  id         Int      @id @default(autoincrement())
+  expense_id Int
+  file_url   String?  @db.Text
+  ocr_data   Json?    // Prisma supports Json for PostgreSQL
+  created_at DateTime @default(now())
+
+  expense    Expense  @relation(fields: [expense_id], references: [id], onDelete: Cascade)
+}
+
+model ApprovalFlow {
+  id                Int      @id @default(autoincrement())
+  company_id        Int
+  step_order        Int
+  approver_role     ApproverRole
+  specific_user_id  Int?
+  is_manager_approver Boolean @default(false)
+  created_at        DateTime @default(now())
+
+  company           Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  specificUser      User?    @relation(fields: [specific_user_id], references: [id])
+
+  @@unique([company_id, step_order])
+}
+
+enum ApproverRole {
+  MANAGER
+  FINANCE
+  DIRECTOR
+  ADMIN
+}
+
+model ExpenseApproval {
+  id           Int            @id @default(autoincrement())
+  expense_id   Int
+  approver_id  Int
+  step_order   Int?
+  status       ApprovalStatus @default(PENDING)
+  comments     String?
+  approved_at  DateTime?
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+
+  expense      Expense        @relation(fields: [expense_id], references: [id], onDelete: Cascade)
+  approver     User           @relation(fields: [approver_id], references: [id], onDelete: Cascade)
+
+  @@unique([expense_id, approver_id])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ApprovalRule {
+  id                  Int      @id @default(autoincrement())
+  company_id          Int
+  rule_type           RuleType
+  percentage_threshold Int?
+  specific_approver_id Int?
+  hybrid_condition    Json?    // e.g., { "percentage": 60, "specific_approver": 5 }
+  created_at          DateTime @default(now())
+
+  company             Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  specificApprover    User?    @relation(fields: [specific_approver_id], references: [id])
+}
+
+enum RuleType {
+  PERCENTAGE
+  SPECIFIC
+  HYBRID
+}
+
+model ExchangeRate {
+  id               Int      @id @default(autoincrement())
+  base_currency    String   @db.VarChar(10)
+  target_currency  String   @db.VarChar(10)
+  rate             Decimal  @db.Decimal(10, 6)
+  fetched_at       DateTime @default(now())
+
+  @@unique([base_currency, target_currency])
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  user_id     Int?
+  company_id  Int
+  action      String   @db.VarChar(255)
+  entity_type String?  @db.VarChar(100)
+  entity_id   Int?
+  details     Json?
+  created_at  DateTime @default(now())
+
+  user        User?    @relation(fields: [user_id], references: [id])
+  company     Company  @relation(fields: [company_id], references: [id])
+}
