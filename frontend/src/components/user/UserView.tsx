@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +12,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Upload, Plus, ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  Upload,
+  Plus,
+  ArrowLeft,
+  ArrowRight,
+  FileImage,
+  X,
+  Scan,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { OCRService, ExtractedExpenseData } from "@/components/services/ocrService";
 
 interface ExpenseEntry {
   id: string;
@@ -23,6 +36,13 @@ interface ExpenseEntry {
   remarks: string;
   amount: number;
   status: "Draft" | "Submitted" | "Waiting Approval" | "Approved" | "Rejected";
+}
+
+interface UploadedFile {
+  file: File;
+  ocrData?: ExtractedExpenseData;
+  isProcessing?: boolean;
+  hasError?: boolean;
 }
 
 interface ExpenseSummary {
@@ -75,20 +95,22 @@ const expenseSummary: ExpenseSummary = {
 };
 
 export default function UserView() {
-  const [expenses, setExpenses] = useState<ExpenseEntry[]>(sampleExpenses);
+  const [expenses] = useState<ExpenseEntry[]>(sampleExpenses);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const ocrService = OCRService.getInstance();
 
   const handleBack = () => {
     window.history.back();
   };
 
   const handleUpload = () => {
-    // Handle file upload logic
-    console.log("Upload expenses");
+    fileInputRef.current?.click();
   };
 
   const handleNew = () => {
-    // Handle creating new expense
-    console.log("Create new expense");
+    router.push('/user/new-expense');
   };
 
   const formatCurrency = (amount: number) => {
@@ -104,12 +126,82 @@ export default function UserView() {
       case "Waiting Approval":
         return "text-yellow-600 bg-yellow-50 border-yellow-200";
       case "Submitted":
-        return "text-blue-600 bg-blue-50 border-blue-200";
+        return "text-purple-600 bg-purple-50 border-blue-200";
       case "Draft":
         return "text-gray-600 bg-gray-50 border-gray-200";
       default:
         return "text-gray-600 bg-gray-50 border-gray-200";
     }
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files).map(file => ({ 
+        file, 
+        isProcessing: true 
+      }));
+      
+      setUploadedFiles((prev) => [...prev, ...newFiles]);
+
+      // Process each file with OCR
+      for (let i = 0; i < newFiles.length; i++) {
+        try {
+          const fileIndex = uploadedFiles.length + i;
+          const ocrData = await ocrService.extractReceiptData(newFiles[i].file);
+          
+          setUploadedFiles((prev) => 
+            prev.map((item, index) => 
+              index === fileIndex 
+                ? { ...item, ocrData, isProcessing: false }
+                : item
+            )
+          );
+
+          // Show success notification
+          console.log('OCR completed for:', newFiles[i].file.name, ocrData);
+          
+        } catch (error) {
+          console.error('OCR failed for:', newFiles[i].file.name, error);
+          
+          setUploadedFiles((prev) => 
+            prev.map((item, index) => 
+              index === uploadedFiles.length + i 
+                ? { ...item, isProcessing: false, hasError: true }
+                : item
+            )
+          );
+        }
+      }
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const createExpenseFromOCR = (ocrData: ExtractedExpenseData) => {
+    // Navigate to new expense form with pre-filled data
+    const queryParams = new URLSearchParams({
+      ...(ocrData.amount && { amount: ocrData.amount.toString() }),
+      ...(ocrData.date && { date: ocrData.date }),
+      ...(ocrData.description && { description: ocrData.description }),
+      ...(ocrData.vendor && { vendor: ocrData.vendor }),
+      ...(ocrData.category && { category: ocrData.category }),
+    });
+
+    router.push(`/user/new-expense?${queryParams.toString()}`);
+  };
+
+  const getOCRStatusIcon = (item: UploadedFile) => {
+    if (item.isProcessing) {
+      return <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />;
+    } else if (item.hasError) {
+      return <AlertCircle className="w-4 h-4 text-red-500" />;
+    } else if (item.ocrData) {
+      return <CheckCircle className="w-4 h-4 text-green-500" />;
+    }
+    return <FileImage className="w-4 h-4 text-purple-600" />;
   };
 
   return (
@@ -127,30 +219,123 @@ export default function UserView() {
       </div>
 
       <Card className="w-full">
-        {/* Header with Upload and New buttons */}
-        <CardHeader className="border-b bg-gray-50">
+        <CardHeader className="border-b">
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl font-bold text-gray-800">
               My Expenses
             </CardTitle>
             <div className="flex gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*,.pdf"
+                multiple
+                className="hidden"
+              />
               <Button
                 onClick={handleUpload}
                 variant="outline"
                 className="flex items-center gap-2"
               >
-                <Upload className="w-4 h-4" />
-                Upload
+                <Scan className="w-4 h-4" />
+                Scan Receipt
               </Button>
               <Button
                 onClick={handleNew}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
               >
                 <Plus className="w-4 h-4" />
                 New
               </Button>
             </div>
           </div>
+
+          {/* Enhanced Uploaded Files Display with OCR Results */}
+          {uploadedFiles.length > 0 && (
+            <div className="mt-4 p-4 bg-purple-50 rounded-lg">
+              <h4 className="text-sm font-medium text-purple-900 mb-3">
+                Scanned Receipts:
+              </h4>
+              <div className="space-y-3">
+                {uploadedFiles.map((item, index) => (
+                  <div
+                    key={index}
+                    className="bg-white p-4 rounded-md border shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {getOCRStatusIcon(item)}
+                        <span className="text-sm font-medium text-gray-700">
+                          {item.file.name}
+                        </span>
+                        {item.isProcessing && (
+                          <span className="text-xs text-blue-600">Processing...</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* OCR Results */}
+                    {item.ocrData && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded border">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {item.ocrData.amount && (
+                            <div>
+                              <span className="font-medium">Amount:</span> ₹{item.ocrData.amount}
+                            </div>
+                          )}
+                          {item.ocrData.date && (
+                            <div>
+                              <span className="font-medium">Date:</span> {item.ocrData.date}
+                            </div>
+                          )}
+                          {item.ocrData.vendor && (
+                            <div>
+                              <span className="font-medium">Vendor:</span> {item.ocrData.vendor}
+                            </div>
+                          )}
+                          {item.ocrData.category && (
+                            <div>
+                              <span className="font-medium">Category:</span> {item.ocrData.category}
+                            </div>
+                          )}
+                        </div>
+                        {item.ocrData.description && (
+                          <div className="mt-2 text-xs">
+                            <span className="font-medium">Items:</span> {item.ocrData.description}
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center mt-3">
+                          <span className="text-xs text-gray-500">
+                            Confidence: {Math.round(item.ocrData.confidence)}%
+                          </span>
+                          <Button
+                            onClick={() => createExpenseFromOCR(item.ocrData!)}
+                            size="sm"
+                            className="h-8 text-xs bg-purple-600 hover:bg-purple-700"
+                          >
+                            Create Expense
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {item.hasError && (
+                      <div className="mt-2 text-xs text-red-600">
+                        Failed to process receipt. Please try again or enter manually.
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardHeader>
 
         {/* Status Progress Bar */}
@@ -261,7 +446,7 @@ export default function UserView() {
           {expenses.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">No expenses found</p>
-              <p className="text-gray-400 text-sm mt-2">Click "New" to add your first expense</p>
+              <p className="text-gray-400 text-sm mt-2">Click &quot;New&quot; to add your first expense</p>
             </div>
           )}
         </CardContent>

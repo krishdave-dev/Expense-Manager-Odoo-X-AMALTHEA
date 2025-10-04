@@ -262,12 +262,12 @@ export default function CreateUserTable() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="h-6 w-6 text-blue-600" />
+            <Users className="h-6 w-6 text-purple-600" />
             Create Users
           </CardTitle>
           <Button
             onClick={addNewUserRow}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+            className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
             New User
@@ -341,7 +341,7 @@ export default function CreateUserTable() {
                               <div
                                 key={user.id}
                                 onClick={() => selectExistingUser(row.id, user)}
-                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                className="px-3 py-2 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                               >
                                 <div className="font-medium text-gray-900">
                                   {user.name}
@@ -423,7 +423,7 @@ export default function CreateUserTable() {
                                 onClick={() =>
                                   selectExistingManager(row.id, manager)
                                 }
-                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                className="px-3 py-2 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                               >
                                 <div className="font-medium text-gray-900">
                                   {manager.name}
@@ -478,7 +478,7 @@ export default function CreateUserTable() {
                         disabled={
                           isLoading[row.id] || !row.email || row.isEditing
                         }
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
                       >
                         {isLoading[row.id] ? (
                           <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-2" />
@@ -497,7 +497,7 @@ export default function CreateUserTable() {
                             <Button
                               size="sm"
                               onClick={() => saveUserRow(row.id)}
-                              className="bg-green-600 hover:bg-green-700 text-white h-8 w-8 p-0"
+                              className="bg-green-600 hover:bg-green-700 text-white h-10 w-8 p-0"
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -505,7 +505,7 @@ export default function CreateUserTable() {
                               size="sm"
                               variant="outline"
                               onClick={() => deleteUserRow(row.id)}
-                              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 h-8 w-8 p-0"
+                              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 h-10 w-8 p-0"
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -516,7 +516,7 @@ export default function CreateUserTable() {
                               size="sm"
                               onClick={() => editUserRow(row.id)}
                               variant="outline"
-                              className="h-8 w-8 p-0"
+                              className="h-10 w-8 p-0"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -524,7 +524,7 @@ export default function CreateUserTable() {
                               size="sm"
                               variant="outline"
                               onClick={() => deleteUserRow(row.id)}
-                              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 h-8 w-8 p-0"
+                              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 h-10 w-8 p-0"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -540,9 +540,9 @@ export default function CreateUserTable() {
         </div>
 
         {userRows.length > 0 && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Quick Tips:</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
+          <div className="mt-6 p-4 bg-purple-50 rounded-lg">
+            <h4 className="font-medium text-purple-900 mb-2">Quick Tips:</h4>
+            <ul className="text-sm text-purple-800 space-y-1">
               <li>• Search for existing users or create new ones on the fly</li>
               <li>
                 • Click the send button to email a temporary password to new

@@ -50,7 +50,7 @@ export default function LeftSection() {
     <Card className="h-fit">
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <User className="h-5 w-5 text-blue-600" />
+          <User className="h-5 w-5 text-purple-600" />
           User Configuration
         </CardTitle>
       </CardHeader>
@@ -68,7 +68,7 @@ export default function LeftSection() {
               placeholder="Enter user name"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              className="border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              className="border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
               required
             />
           </div>
@@ -121,7 +121,7 @@ export default function LeftSection() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
             >
               {isLoading ? "Saving..." : "Save Configuration"}
             </Button>

@@ -142,7 +142,7 @@ export default function LoginSection() {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="pl-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                   required
                 />
               </div>
@@ -160,7 +160,7 @@ export default function LoginSection() {
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="pl-10 pr-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                   required
                 />
                 <button
@@ -180,7 +180,7 @@ export default function LoginSection() {
             <div className="flex justify-end">
               <Link
                 href="/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                className="text-sm text-purple-600 hover:text-purple-800 hover:underline"
               >
                 Forgot password?
               </Link>
@@ -190,7 +190,7 @@ export default function LoginSection() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 h-10"
             >
               Sign In
             </Button>
@@ -199,7 +199,7 @@ export default function LoginSection() {
               Don&apos;t have an account?{" "}
               <Link
                 href="/signup"
-                className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                className="text-purple-600 hover:text-purple-800 font-medium hover:underline"
               >
                 Sign up
               </Link>
@@ -236,7 +236,7 @@ export default function LoginSection() {
                     placeholder="Enter new password"
                     value={newPasswordData.newPassword}
                     onChange={handleNewPasswordChange}
-                    className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 pr-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                     required
                     minLength={6}
                   />
@@ -266,7 +266,7 @@ export default function LoginSection() {
                     placeholder="Confirm new password"
                     value={newPasswordData.confirmPassword}
                     onChange={handleNewPasswordChange}
-                    className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 pr-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                     required
                     minLength={6}
                   />
@@ -284,8 +284,8 @@ export default function LoginSection() {
                 </div>
               </div>
 
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-sm text-blue-800">
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
+                <p className="text-sm text-purple-800">
                   <strong>Requirements:</strong> Password must be at least 6
                   characters long
                 </p>
@@ -295,7 +295,7 @@ export default function LoginSection() {
             <DialogFooter>
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 h-10"
               >
                 Update Password
               </Button>

@@ -87,7 +87,7 @@ export default function RightSection() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-600" />
+            <Users className="h-5 w-5 text-purple-600" />
             Approvers
           </CardTitle>
           <div className="flex items-center space-x-2">
@@ -98,7 +98,7 @@ export default function RightSection() {
               type="checkbox"
               checked={isManagerApprover}
               onChange={(e) => setIsManagerApprover(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-purple-600 focus:ring-blue-500 border-gray-300 rounded"
             />
           </div>
         </div>
@@ -144,7 +144,7 @@ export default function RightSection() {
                           onChange={(e) =>
                             handleRequiredChange(approver.id, e.target.checked)
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-purple-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                       </TableCell>
                     </TableRow>
@@ -165,13 +165,13 @@ export default function RightSection() {
           </div>
 
           {/* Approve Sequence Checkbox */}
-          <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-blue-200">
             <input
               type="checkbox"
               id="approveSequence"
               checked={approveSequence}
               onChange={(e) => setApproveSequence(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-purple-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label
               htmlFor="approveSequence"
@@ -216,7 +216,7 @@ export default function RightSection() {
           <div className="pt-4 border-t border-gray-200">
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
             >
               Save Approval Settings
             </Button>

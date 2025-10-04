@@ -10,18 +10,19 @@ export default function AdminView() {
           Company Configuration
         </h2>
         <p className="text-gray-600 mt-2">
-          Set up your company's expense management rules and approval workflow
+          Set up your company&apos;s expense management rules and approval
+          workflow
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Left Half */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           <LeftSection />
         </div>
 
         {/* Right Half */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           <RightSection />
         </div>
       </div>
