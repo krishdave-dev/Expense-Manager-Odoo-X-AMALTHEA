@@ -9,13 +9,19 @@ export class ApprovalsController {
 
   @Post(':expenseId/approve')
   approve(@Param('expenseId') expenseId: string, @Body() dto: ApproveExpenseDto, @Request() req) {
-    const approverId = 1; // TODO: replace with req.user.id (using admin user for now)
+    const approverId = req.user?.id || req.user?.sub;
+    if (!approverId) {
+      throw new Error('User not authenticated');
+    }
     return this.approvalsService.approveExpense(+expenseId, approverId, dto);
   }
 
   @Get('pending')
   getPending(@Request() req) {
-    const approverId = 1; // TODO: replace with req.user.id (using admin user for now)
+    const approverId = req.user?.id || req.user?.sub;
+    if (!approverId) {
+      throw new Error('User not authenticated');
+    }
     return this.approvalsService.getPendingApprovals(approverId);
   }
 

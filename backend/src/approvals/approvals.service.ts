@@ -59,7 +59,40 @@ export class ApprovalsService {
     });
 
     console.log(`Found ${approvals.length} pending approvals`);
-    return approvals;
+    
+    // Transform to camelCase
+    return approvals.map(approval => ({
+      id: approval.id,
+      expenseId: approval.expense_id,
+      approverId: approval.approver_id,
+      stepOrder: approval.step_order,
+      status: approval.status,
+      comments: approval.comments,
+      approvedAt: approval.approved_at?.toISOString(),
+      createdAt: approval.created_at.toISOString(),
+      updatedAt: approval.updated_at.toISOString(),
+      expense: {
+        id: approval.expense.id,
+        employeeId: approval.expense.employee_id,
+        companyId: approval.expense.company_id,
+        category: approval.expense.category,
+        description: approval.expense.description,
+        amount: approval.expense.amount.toString(),
+        currencyCode: approval.expense.currency_code,
+        convertedAmount: approval.expense.converted_amount?.toString(),
+        date: approval.expense.date.toISOString(),
+        status: approval.expense.status,
+        createdAt: approval.expense.created_at.toISOString(),
+        updatedAt: approval.expense.updated_at.toISOString(),
+        employee: approval.expense.employee,
+        company: {
+          id: approval.expense.company.id,
+          name: approval.expense.company.name,
+          currencyCode: approval.expense.company.currency_code,
+          currencySymbol: approval.expense.company.currency_symbol,
+        },
+      },
+    }));
   }
 
   async setupDefaultApprovalFlow(companyId: number) {

@@ -148,6 +148,18 @@ let UsersService = class UsersService {
                 created_at: true,
                 updated_at: true,
                 company_id: true,
+                managers: {
+                    select: {
+                        manager: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                role: true,
+                            },
+                        },
+                    },
+                },
             },
             orderBy: { created_at: 'desc' },
         });
@@ -161,6 +173,7 @@ let UsersService = class UsersService {
             isTempPassword: user.is_temp_password,
             createdAt: user.created_at.toISOString(),
             updatedAt: user.updated_at?.toISOString(),
+            managers: user.managers.map(relation => relation.manager),
         }));
         return {
             users,
@@ -284,6 +297,124 @@ let UsersService = class UsersService {
             },
             emailSent: false,
         };
+    }
+    async assignManager(adminId, employeeId, managerId) {
+        const adminUser = await this.prisma.user.findUnique({
+            where: { id: adminId },
+            include: { company: true },
+        });
+        if (!adminUser || adminUser.role !== 'ADMIN') {
+            throw new common_1.ForbiddenException('Only admins can assign managers');
+        }
+        const employee = await this.prisma.user.findUnique({ where: { id: employeeId } });
+        const manager = await this.prisma.user.findUnique({ where: { id: managerId } });
+        if (!employee || !manager) {
+            throw new common_1.NotFoundException('Employee or manager not found');
+        }
+        if (employee.company_id !== adminUser.company_id || manager.company_id !== adminUser.company_id) {
+            throw new common_1.ForbiddenException('Users must be in the same company');
+        }
+        if (manager.role !== 'MANAGER' && manager.role !== 'ADMIN') {
+            throw new common_1.BadRequestException('Assigned user must have MANAGER or ADMIN role');
+        }
+        const existing = await this.prisma.managerRelation.findUnique({
+            where: {
+                employee_id_manager_id: {
+                    employee_id: employeeId,
+                    manager_id: managerId,
+                },
+            },
+        });
+        if (existing) {
+            throw new common_1.ConflictException('Manager-employee relationship already exists');
+        }
+        const relation = await this.prisma.managerRelation.create({
+            data: {
+                employee_id: employeeId,
+                manager_id: managerId,
+            },
+            include: {
+                employee: { select: { id: true, name: true, email: true, role: true } },
+                manager: { select: { id: true, name: true, email: true, role: true } },
+            },
+        });
+        return {
+            message: 'Manager assigned successfully',
+            relation: {
+                id: relation.id,
+                employeeId: relation.employee_id,
+                managerId: relation.manager_id,
+                employee: relation.employee,
+                manager: relation.manager,
+            },
+        };
+    }
+    async removeManager(adminId, employeeId, managerId) {
+        const adminUser = await this.prisma.user.findUnique({
+            where: { id: adminId },
+        });
+        if (!adminUser || adminUser.role !== 'ADMIN') {
+            throw new common_1.ForbiddenException('Only admins can remove managers');
+        }
+        const relation = await this.prisma.managerRelation.findUnique({
+            where: {
+                employee_id_manager_id: {
+                    employee_id: employeeId,
+                    manager_id: managerId,
+                },
+            },
+        });
+        if (!relation) {
+            throw new common_1.NotFoundException('Manager-employee relationship not found');
+        }
+        await this.prisma.managerRelation.delete({
+            where: { id: relation.id },
+        });
+        return {
+            message: 'Manager removed successfully',
+        };
+    }
+    async getUserManagers(requesterId, userId) {
+        const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
+        if (!requester) {
+            throw new common_1.UnauthorizedException('Invalid user');
+        }
+        if (requesterId !== userId && requester.role !== 'ADMIN') {
+            throw new common_1.ForbiddenException('Can only view your own managers unless you are an admin');
+        }
+        const relations = await this.prisma.managerRelation.findMany({
+            where: { employee_id: userId },
+            include: {
+                manager: { select: { id: true, name: true, email: true, role: true } },
+            },
+        });
+        return relations.map(relation => ({
+            id: relation.id,
+            employeeId: relation.employee_id,
+            managerId: relation.manager_id,
+            manager: relation.manager,
+        }));
+    }
+    async getUserEmployees(requesterId, managerId) {
+        const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
+        if (!requester) {
+            throw new common_1.UnauthorizedException('Invalid user');
+        }
+        if (requesterId !== managerId && requester.role !== 'ADMIN') {
+            throw new common_1.ForbiddenException('Can only view your own employees unless you are an admin');
+        }
+        const relations = await this.prisma.managerRelation.findMany({
+            where: { manager_id: managerId },
+            include: {
+                employee: { select: { id: true, name: true, email: true, role: true } },
+            },
+        });
+        return relations.map(relation => ({
+            id: relation.id,
+            employeeId: relation.employee_id,
+            managerId: relation.manager_id,
+            employee: relation.employee,
+        }));
     }
     generateRandomPassword() {
         const length = 12;

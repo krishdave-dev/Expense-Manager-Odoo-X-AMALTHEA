@@ -95,7 +95,7 @@ export class ExpensesService {
   }
 
   async getMyExpenses(employeeId: number) {
-    return this.prisma.expense.findMany({
+    const expenses = await this.prisma.expense.findMany({
       where: { employee_id: employeeId },
       include: {
         employee: {
@@ -129,5 +129,47 @@ export class ExpensesService {
       },
       orderBy: { created_at: 'desc' },
     });
+
+    // Transform to camelCase
+    return expenses.map(expense => ({
+      id: expense.id,
+      employeeId: expense.employee_id,
+      companyId: expense.company_id,
+      category: expense.category,
+      description: expense.description,
+      amount: expense.amount.toString(),
+      currencyCode: expense.currency_code,
+      convertedAmount: expense.converted_amount?.toString(),
+      date: expense.date.toISOString(),
+      status: expense.status,
+      createdAt: expense.created_at.toISOString(),
+      updatedAt: expense.updated_at.toISOString(),
+      employee: expense.employee,
+      company: {
+        id: expense.company.id,
+        name: expense.company.name,
+        currencyCode: expense.company.currency_code,
+        currencySymbol: expense.company.currency_symbol,
+      },
+      approvals: expense.approvals.map(approval => ({
+        id: approval.id,
+        expenseId: approval.expense_id,
+        approverId: approval.approver_id,
+        stepOrder: approval.step_order,
+        status: approval.status,
+        comments: approval.comments,
+        approvedAt: approval.approved_at?.toISOString(),
+        createdAt: approval.created_at.toISOString(),
+        updatedAt: approval.updated_at.toISOString(),
+        approver: approval.approver,
+      })),
+      attachments: expense.attachments.map(attachment => ({
+        id: attachment.id,
+        expenseId: attachment.expense_id,
+        fileUrl: attachment.file_url,
+        ocrData: attachment.ocr_data,
+        createdAt: attachment.created_at.toISOString(),
+      })),
+    }));
   }
 }

@@ -9,14 +9,19 @@ export class ExpensesController {
 
   @Post()
   create(@Body() dto: CreateExpenseDto, @Request() req) {
-    // In real app, get employeeId from JWT
-    const employeeId = 1; // TODO: replace with req.user.id
+    const employeeId = req.user?.id || req.user?.sub;
+    if (!employeeId) {
+      throw new Error('User not authenticated');
+    }
     return this.expensesService.createExpense(employeeId, dto);
   }
 
   @Get('my')
   getMy(@Request() req) {
-    const employeeId = 1; // TODO: replace with req.user.id
+    const employeeId = req.user?.id || req.user?.sub;
+    if (!employeeId) {
+      throw new Error('User not authenticated');
+    }
     return this.expensesService.getMyExpenses(employeeId);
   }
 }

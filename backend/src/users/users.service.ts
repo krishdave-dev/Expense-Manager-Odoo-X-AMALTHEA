@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, ForbiddenException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -133,6 +133,18 @@ export class UsersService {
         created_at: true,
         updated_at: true,
         company_id: true,
+        managers: {
+          select: {
+            manager: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { created_at: 'desc' },
     });
@@ -148,6 +160,7 @@ export class UsersService {
       isTempPassword: user.is_temp_password,
       createdAt: user.created_at.toISOString(),
       updatedAt: user.updated_at?.toISOString(),
+      managers: user.managers.map(relation => relation.manager),
     }));
 
     return {
@@ -301,6 +314,170 @@ export class UsersService {
       },
       emailSent: false,
     };
+  }
+
+  /**
+   * Assign manager to employee
+   */
+  async assignManager(adminId: number, employeeId: number, managerId: number) {
+    // Verify admin permissions
+    const adminUser = await this.prisma.user.findUnique({
+      where: { id: adminId },
+      include: { company: true },
+    });
+
+    if (!adminUser || adminUser.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can assign managers');
+    }
+
+    // Verify both employee and manager exist and are in the same company
+    const employee = await this.prisma.user.findUnique({ where: { id: employeeId } });
+    const manager = await this.prisma.user.findUnique({ where: { id: managerId } });
+
+    if (!employee || !manager) {
+      throw new NotFoundException('Employee or manager not found');
+    }
+
+    if (employee.company_id !== adminUser.company_id || manager.company_id !== adminUser.company_id) {
+      throw new ForbiddenException('Users must be in the same company');
+    }
+
+    if (manager.role !== 'MANAGER' && manager.role !== 'ADMIN') {
+      throw new BadRequestException('Assigned user must have MANAGER or ADMIN role');
+    }
+
+    // Check if relationship already exists
+    const existing = await this.prisma.managerRelation.findUnique({
+      where: {
+        employee_id_manager_id: {
+          employee_id: employeeId,
+          manager_id: managerId,
+        },
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException('Manager-employee relationship already exists');
+    }
+
+    // Create the relationship
+    const relation = await this.prisma.managerRelation.create({
+      data: {
+        employee_id: employeeId,
+        manager_id: managerId,
+      },
+      include: {
+        employee: { select: { id: true, name: true, email: true, role: true } },
+        manager: { select: { id: true, name: true, email: true, role: true } },
+      },
+    });
+
+    return {
+      message: 'Manager assigned successfully',
+      relation: {
+        id: relation.id,
+        employeeId: relation.employee_id,
+        managerId: relation.manager_id,
+        employee: relation.employee,
+        manager: relation.manager,
+      },
+    };
+  }
+
+  /**
+   * Remove manager from employee
+   */
+  async removeManager(adminId: number, employeeId: number, managerId: number) {
+    // Verify admin permissions
+    const adminUser = await this.prisma.user.findUnique({
+      where: { id: adminId },
+    });
+
+    if (!adminUser || adminUser.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can remove managers');
+    }
+
+    // Find and delete the relationship
+    const relation = await this.prisma.managerRelation.findUnique({
+      where: {
+        employee_id_manager_id: {
+          employee_id: employeeId,
+          manager_id: managerId,
+        },
+      },
+    });
+
+    if (!relation) {
+      throw new NotFoundException('Manager-employee relationship not found');
+    }
+
+    await this.prisma.managerRelation.delete({
+      where: { id: relation.id },
+    });
+
+    return {
+      message: 'Manager removed successfully',
+    };
+  }
+
+  /**
+   * Get user's managers
+   */
+  async getUserManagers(requesterId: number, userId: number) {
+    // Users can view their own managers, or admins can view anyone's
+    const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
+    
+    if (!requester) {
+      throw new UnauthorizedException('Invalid user');
+    }
+
+    if (requesterId !== userId && requester.role !== 'ADMIN') {
+      throw new ForbiddenException('Can only view your own managers unless you are an admin');
+    }
+
+    const relations = await this.prisma.managerRelation.findMany({
+      where: { employee_id: userId },
+      include: {
+        manager: { select: { id: true, name: true, email: true, role: true } },
+      },
+    });
+
+    return relations.map(relation => ({
+      id: relation.id,
+      employeeId: relation.employee_id,
+      managerId: relation.manager_id,
+      manager: relation.manager,
+    }));
+  }
+
+  /**
+   * Get user's employees (for managers)
+   */
+  async getUserEmployees(requesterId: number, managerId: number) {
+    // Only managers can view their employees, or admins can view anyone's
+    const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
+    
+    if (!requester) {
+      throw new UnauthorizedException('Invalid user');
+    }
+
+    if (requesterId !== managerId && requester.role !== 'ADMIN') {
+      throw new ForbiddenException('Can only view your own employees unless you are an admin');
+    }
+
+    const relations = await this.prisma.managerRelation.findMany({
+      where: { manager_id: managerId },
+      include: {
+        employee: { select: { id: true, name: true, email: true, role: true } },
+      },
+    });
+
+    return relations.map(relation => ({
+      id: relation.id,
+      employeeId: relation.employee_id,
+      managerId: relation.manager_id,
+      employee: relation.employee,
+    }));
   }
 
   /**

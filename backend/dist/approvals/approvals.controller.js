@@ -21,11 +21,17 @@ let ApprovalsController = class ApprovalsController {
         this.approvalsService = approvalsService;
     }
     approve(expenseId, dto, req) {
-        const approverId = 1;
+        const approverId = req.user?.id || req.user?.sub;
+        if (!approverId) {
+            throw new Error('User not authenticated');
+        }
         return this.approvalsService.approveExpense(+expenseId, approverId, dto);
     }
     getPending(req) {
-        const approverId = 1;
+        const approverId = req.user?.id || req.user?.sub;
+        if (!approverId) {
+            throw new Error('User not authenticated');
+        }
         return this.approvalsService.getPendingApprovals(approverId);
     }
     async setupApprovalFlow(companyId) {

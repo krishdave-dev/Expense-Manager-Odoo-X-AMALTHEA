@@ -34,6 +34,12 @@ export interface User {
   isTempPassword: boolean;
   createdAt: string;
   updatedAt?: string;
+  managers?: Array<{
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  }>;
 }
 
 export interface Company {
@@ -159,6 +165,48 @@ class ApiClient {
       method: 'PATCH',
       body: JSON.stringify({ isActive }),
     });
+  }
+
+  // Manager-Employee Relationships
+  async assignManager(employeeId: number, managerId: number): Promise<{
+    message: string;
+    relation: {
+      id: number;
+      employeeId: number;
+      managerId: number;
+      employee: { id: number; name: string; email: string; role: string };
+      manager: { id: number; name: string; email: string; role: string };
+    };
+  }> {
+    return this.request(`/users/${employeeId}/manager/${managerId}`, {
+      method: 'POST',
+    });
+  }
+
+  async removeManager(employeeId: number, managerId: number): Promise<{
+    message: string;
+  }> {
+    return this.request(`/users/${employeeId}/manager/${managerId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getUserManagers(userId: number): Promise<Array<{
+    id: number;
+    employeeId: number;
+    managerId: number;
+    manager: { id: number; name: string; email: string; role: string };
+  }>> {
+    return this.request(`/users/${userId}/managers`);
+  }
+
+  async getUserEmployees(managerId: number): Promise<Array<{
+    id: number;
+    employeeId: number;
+    managerId: number;
+    employee: { id: number; name: string; email: string; role: string };
+  }>> {
+    return this.request(`/users/${managerId}/employees`);
   }
 
   // Token management

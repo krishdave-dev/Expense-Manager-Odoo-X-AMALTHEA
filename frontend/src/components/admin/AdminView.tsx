@@ -34,6 +34,9 @@ export default function AdminView() {
   const [showPassword, setShowPassword] = useState(false);
   const [createUserLoading, setCreateUserLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showManagerDialog, setShowManagerDialog] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  const [managerAssignLoading, setManagerAssignLoading] = useState(false);
   
   const [newUserData, setNewUserData] = useState<CreateUserData>({
     name: '',
@@ -120,6 +123,49 @@ export default function AdminView() {
       setTimeout(() => setSuccessMessage(''), 10000);
     } catch (error: any) {
       setError(error.message || 'Failed to update user status');
+    }
+  };
+
+  const handleAssignManager = (employeeId: number) => {
+    setSelectedEmployeeId(employeeId);
+    setShowManagerDialog(true);
+  };
+
+  const handleManagerAssignment = async (managerId: number) => {
+    if (!selectedEmployeeId) return;
+
+    try {
+      setManagerAssignLoading(true);
+      setError('');
+      
+      const response = await apiClient.assignManager(selectedEmployeeId, managerId);
+      setSuccessMessage(response.message || 'Manager assigned successfully!');
+      
+      await loadUsers(); // Reload users to show updated manager assignments
+      setShowManagerDialog(false);
+      setSelectedEmployeeId(null);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error: any) {
+      setError(error.message || 'Failed to assign manager');
+    } finally {
+      setManagerAssignLoading(false);
+    }
+  };
+
+  const handleRemoveManager = async (employeeId: number, managerId: number) => {
+    try {
+      setError('');
+      const response = await apiClient.removeManager(employeeId, managerId);
+      setSuccessMessage(response.message || 'Manager removed successfully!');
+      
+      await loadUsers(); // Reload users to show updated manager assignments
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error: any) {
+      setError(error.message || 'Failed to remove manager');
     }
   };
 
@@ -268,6 +314,7 @@ export default function AdminView() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Manager</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -286,6 +333,37 @@ export default function AdminView() {
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(userItem.isActive)}`}>
                           {userItem.isActive ? 'Active' : 'Inactive'}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        {userItem.managers && userItem.managers.length > 0 ? (
+                          <div className="space-y-1">
+                            {userItem.managers.map((manager, index) => (
+                              <div key={manager.id} className="flex items-center justify-between">
+                                <span className="text-sm">{manager.name}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveManager(userItem.id, manager.id)}
+                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                >
+                                  ×
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400 text-sm">No manager</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleAssignManager(userItem.id)}
+                              className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700"
+                            >
+                              +
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         {userItem.createdAt ? 
@@ -408,6 +486,80 @@ export default function AdminView() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Manager Dialog */}
+      <Dialog open={showManagerDialog} onOpenChange={setShowManagerDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Manager</DialogTitle>
+            <DialogDescription>
+              Select a manager to assign to this employee. Only users with MANAGER or ADMIN roles can be assigned as managers.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Available Managers</label>
+              <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-md">
+                {users
+                  .filter(u => 
+                    (u.role === 'MANAGER' || u.role === 'ADMIN') && 
+                    u.id !== selectedEmployeeId &&
+                    u.isActive
+                  )
+                  .map((manager) => (
+                    <div
+                      key={manager.id}
+                      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{manager.name}</div>
+                        <div className="text-sm text-gray-500">{manager.email}</div>
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(manager.role)}`}>
+                          {manager.role}
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleManagerAssignment(manager.id)}
+                        disabled={managerAssignLoading}
+                      >
+                        {managerAssignLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          'Assign'
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                {users.filter(u => 
+                  (u.role === 'MANAGER' || u.role === 'ADMIN') && 
+                  u.id !== selectedEmployeeId &&
+                  u.isActive
+                ).length === 0 && (
+                  <div className="p-4 text-center text-gray-500">
+                    No available managers found. Only active users with MANAGER or ADMIN roles can be assigned as managers.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowManagerDialog(false);
+                setSelectedEmployeeId(null);
+              }}
+              disabled={managerAssignLoading}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

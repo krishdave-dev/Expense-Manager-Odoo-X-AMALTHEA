@@ -45,6 +45,12 @@ export declare class UsersService {
             isTempPassword: boolean;
             createdAt: string;
             updatedAt: string;
+            managers: {
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                id: number;
+            }[];
         }[];
         total: number;
     }>;
@@ -94,5 +100,50 @@ export declare class UsersService {
         emailSent: boolean;
         emailError: string;
     }>;
+    assignManager(adminId: number, employeeId: number, managerId: number): Promise<{
+        message: string;
+        relation: {
+            id: number;
+            employeeId: number;
+            managerId: number;
+            employee: {
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                id: number;
+            };
+            manager: {
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+                id: number;
+            };
+        };
+    }>;
+    removeManager(adminId: number, employeeId: number, managerId: number): Promise<{
+        message: string;
+    }>;
+    getUserManagers(requesterId: number, userId: number): Promise<{
+        id: number;
+        employeeId: number;
+        managerId: number;
+        manager: {
+            name: string;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+            id: number;
+        };
+    }[]>;
+    getUserEmployees(requesterId: number, managerId: number): Promise<{
+        id: number;
+        employeeId: number;
+        managerId: number;
+        employee: {
+            name: string;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+            id: number;
+        };
+    }[]>;
     private generateRandomPassword;
 }

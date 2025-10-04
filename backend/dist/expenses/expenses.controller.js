@@ -21,11 +21,17 @@ let ExpensesController = class ExpensesController {
         this.expensesService = expensesService;
     }
     create(dto, req) {
-        const employeeId = 1;
+        const employeeId = req.user?.id || req.user?.sub;
+        if (!employeeId) {
+            throw new Error('User not authenticated');
+        }
         return this.expensesService.createExpense(employeeId, dto);
     }
     getMy(req) {
-        const employeeId = 1;
+        const employeeId = req.user?.id || req.user?.sub;
+        if (!employeeId) {
+            throw new Error('User not authenticated');
+        }
         return this.expensesService.getMyExpenses(employeeId);
     }
 };

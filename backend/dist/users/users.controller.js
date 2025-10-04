@@ -37,6 +37,18 @@ let UsersController = class UsersController {
     async updateUserStatus(user, targetUserId, isActive) {
         return this.usersService.updateUserStatus(user.id, targetUserId, isActive);
     }
+    async assignManager(user, employeeId, managerId) {
+        return this.usersService.assignManager(user.id, employeeId, managerId);
+    }
+    async removeManager(user, employeeId, managerId) {
+        return this.usersService.removeManager(user.id, employeeId, managerId);
+    }
+    async getUserManagers(user, userId) {
+        return this.usersService.getUserManagers(user.id, userId);
+    }
+    async getUserEmployees(user, managerId) {
+        return this.usersService.getUserEmployees(user.id, managerId);
+    }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -73,6 +85,43 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Boolean]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateUserStatus", null);
+__decorate([
+    (0, common_1.Post)(':employeeId/manager/:managerId'),
+    (0, roles_decorators_1.Roles)(client_1.Role.ADMIN),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('employeeId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Param)('managerId', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "assignManager", null);
+__decorate([
+    (0, common_1.Delete)(':employeeId/manager/:managerId'),
+    (0, roles_decorators_1.Roles)(client_1.Role.ADMIN),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('employeeId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Param)('managerId', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "removeManager", null);
+__decorate([
+    (0, common_1.Get)(':id/managers'),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getUserManagers", null);
+__decorate([
+    (0, common_1.Get)(':id/employees'),
+    (0, roles_decorators_1.Roles)(client_1.Role.MANAGER, client_1.Role.ADMIN),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getUserEmployees", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('users'),
