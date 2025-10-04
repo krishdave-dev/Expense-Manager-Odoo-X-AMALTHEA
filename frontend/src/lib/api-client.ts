@@ -219,6 +219,96 @@ class ApiClient {
     return this.request(`/users/${managerId}/employees`);
   }
 
+  // User Expense Management
+  async createExpense(expenseData: {
+    amount: number;
+    currency_code: string;
+    category?: string;
+    description?: string;
+    date: string;
+  }): Promise<any> {
+    return this.request('/expenses', {
+      method: 'POST',
+      body: JSON.stringify(expenseData),
+    });
+  }
+
+  async getMyExpenses(): Promise<any[]> {
+    return this.request('/expenses/my');
+  }
+
+  async createDraftExpense(expenseData: {
+    amount: number;
+    currency_code: string;
+    category?: string;
+    description?: string;
+    date: string;
+  }): Promise<any> {
+    return this.request('/expenses/draft', {
+      method: 'POST',
+      body: JSON.stringify(expenseData),
+    });
+  }
+
+  async getDraftExpenses(): Promise<any[]> {
+    return this.request('/expenses/my/drafts');
+  }
+
+  async getDraftExpensesTotal(): Promise<number> {
+    return this.request('/expenses/my/drafts/total');
+  }
+
+  async submitDraftExpense(expenseId: number): Promise<any> {
+    return this.request(`/expenses/${expenseId}/submit`, {
+      method: 'POST',
+    });
+  }
+
+  async updateDraftExpense(expenseId: number, expenseData: {
+    amount: number;
+    currency_code: string;
+    category?: string;
+    description?: string;
+    date: string;
+  }): Promise<any> {
+    return this.request(`/expenses/${expenseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(expenseData),
+    });
+  }
+
+  async processReceiptOCR(file: File): Promise<{
+    success: boolean;
+    data?: any;
+    error?: string;
+    message?: string;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `${API_BASE_URL}/expenses/ocr/process-receipt`;
+    const token = this.getAuthToken();
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type for FormData - browser will set it with boundary
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: 'Failed to process receipt',
+        statusCode: response.status,
+      }));
+      throw errorData as ApiError;
+    }
+
+    return await response.json();
+  }
+
   // Admin Expense Management
   async getAllCompanyExpenses(): Promise<{
     expenses: any[];

@@ -20,11 +20,11 @@ export declare class JwtStrategy extends JwtStrategy_base {
         role: import(".prisma/client").$Enums.Role;
         companyId: number;
         company: {
-            name: string;
-            country: string | null;
             id: number;
+            name: string;
             created_at: Date;
             updated_at: Date;
+            country: string | null;
             currency_code: string;
             currency_symbol: string | null;
         };

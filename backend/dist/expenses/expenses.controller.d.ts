@@ -17,6 +17,20 @@ export declare class ExpensesController {
         employee_id: number;
         company_id: number;
     }>;
+    createDraft(dto: CreateExpenseDto, user: any): Promise<{
+        category: string | null;
+        description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        currency_code: string;
+        converted_amount: import("@prisma/client/runtime/library").Decimal | null;
+        date: Date;
+        status: import(".prisma/client").$Enums.ExpenseStatus;
+        created_at: Date;
+        updated_at: Date;
+        id: number;
+        employee_id: number;
+        company_id: number;
+    }>;
     getMy(user: any): Promise<{
         id: any;
         employeeId: any;
@@ -40,6 +54,58 @@ export declare class ExpensesController {
         approvals: any;
         attachments: any;
     }[]>;
+    getMyDrafts(user: any): Promise<{
+        id: any;
+        employeeId: any;
+        companyId: any;
+        category: any;
+        description: any;
+        amount: any;
+        currencyCode: any;
+        convertedAmount: any;
+        date: any;
+        status: any;
+        createdAt: any;
+        updatedAt: any;
+        employee: any;
+        company: {
+            id: any;
+            name: any;
+            currencyCode: any;
+            currencySymbol: any;
+        };
+        approvals: any;
+        attachments: any;
+    }[]>;
+    getMyDraftsTotal(user: any): Promise<import("@prisma/client/runtime/library").Decimal | 0>;
+    submitDraft(expenseId: number, user: any): Promise<{
+        category: string | null;
+        description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        currency_code: string;
+        converted_amount: import("@prisma/client/runtime/library").Decimal | null;
+        date: Date;
+        status: import(".prisma/client").$Enums.ExpenseStatus;
+        created_at: Date;
+        updated_at: Date;
+        id: number;
+        employee_id: number;
+        company_id: number;
+    }>;
+    updateDraft(expenseId: number, dto: CreateExpenseDto, user: any): Promise<{
+        category: string | null;
+        description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        currency_code: string;
+        converted_amount: import("@prisma/client/runtime/library").Decimal | null;
+        date: Date;
+        status: import(".prisma/client").$Enums.ExpenseStatus;
+        created_at: Date;
+        updated_at: Date;
+        id: number;
+        employee_id: number;
+        company_id: number;
+    }>;
     getAllCompanyExpenses(user: any): Promise<{
         expenses: {
             id: any;
@@ -105,5 +171,25 @@ export declare class ExpensesController {
             employee_id: number;
             company_id: number;
         };
+    }>;
+    processReceipt(file: any, user: any): Promise<{
+        success: boolean;
+        data: {
+            amount: number;
+            date: string;
+            description: string;
+            vendor: string;
+            category: string;
+            confidence: number;
+            rawText: any;
+            processingTime: number;
+        };
+        message: string;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: string;
+        data?: undefined;
+        message?: undefined;
     }>;
 }

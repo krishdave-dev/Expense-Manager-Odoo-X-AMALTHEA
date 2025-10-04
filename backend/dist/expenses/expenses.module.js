@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExpensesModule = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const expenses_service_1 = require("./expenses.service");
 const expenses_controller_1 = require("./expenses.controller");
 const prisma_service_1 = require("../prisma/prisma.service");
@@ -17,7 +18,22 @@ let ExpensesModule = class ExpensesModule {
 exports.ExpensesModule = ExpensesModule;
 exports.ExpensesModule = ExpensesModule = __decorate([
     (0, common_1.Module)({
-        imports: [exchange_rates_module_1.ExchangeRatesModule],
+        imports: [
+            exchange_rates_module_1.ExchangeRatesModule,
+            platform_express_1.MulterModule.register({
+                limits: {
+                    fileSize: 10 * 1024 * 1024,
+                },
+                fileFilter: (req, file, cb) => {
+                    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+                        cb(null, true);
+                    }
+                    else {
+                        cb(new Error('Only image files and PDFs are allowed!'), false);
+                    }
+                },
+            }),
+        ],
         controllers: [expenses_controller_1.ExpensesController],
         providers: [expenses_service_1.ExpensesService, prisma_service_1.PrismaService],
     })

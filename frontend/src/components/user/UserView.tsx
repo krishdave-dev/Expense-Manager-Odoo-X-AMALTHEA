@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,17 +27,58 @@ import {
   OCRService,
   ExtractedExpenseData,
 } from "@/components/services/ocrService";
+import { useAuth } from '@/lib/auth-context';
+import { apiClient } from '@/lib/api-client';
+import { toast } from '@/lib/toast';
 
 interface ExpenseEntry {
-  id: string;
-  employee: string;
-  description: string;
+  id: number;
+  employeeId: number;
+  companyId: number;
+  category?: string;
+  description?: string;
+  amount: string;
+  currencyCode: string;
+  convertedAmount?: string;
   date: string;
-  category: string;
-  paidBy: string;
-  remarks: string;
-  amount: number;
-  status: "Draft" | "Submitted" | "Waiting Approval" | "Approved" | "Rejected";
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  updatedAt: string;
+  employee: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  company: {
+    id: number;
+    name: string;
+    currencyCode: string;
+    currencySymbol: string;
+  };
+  approvals: Array<{
+    id: number;
+    expenseId: number;
+    approverId: number;
+    stepOrder: number;
+    status: string;
+    comments?: string;
+    approvedAt?: string;
+    createdAt: string;
+    updatedAt: string;
+    approver: {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+    };
+  }>;
+  attachments: Array<{
+    id: number;
+    expenseId: number;
+    fileUrl: string;
+    ocrData?: any;
+    createdAt: string;
+  }>;
 }
 
 interface UploadedFile {
@@ -53,55 +94,58 @@ interface ExpenseSummary {
   approved: number;
 }
 
-// Sample data - replace with actual API call
-const sampleExpenses: ExpenseEntry[] = [
-  {
-    id: "1",
-    employee: "Sarah",
-    description: "Restaurant bill",
-    date: "16th Oct, 2025",
-    category: "Food",
-    paidBy: "Sarah",
-    remarks: "None",
-    amount: 5000,
-    status: "Submitted",
-  },
-  {
-    id: "2",
-    employee: "Sarah",
-    description: "Office supplies",
-    date: "15th Oct, 2025",
-    category: "Office",
-    paidBy: "Sarah",
-    remarks: "Urgent purchase",
-    amount: 2500,
-    status: "Draft",
-  },
-  {
-    id: "3",
-    employee: "Sarah",
-    description: "Travel expenses",
-    date: "14th Oct, 2025",
-    category: "Travel",
-    paidBy: "Sarah",
-    remarks: "Client meeting",
-    amount: 15000,
-    status: "Waiting Approval",
-  },
-];
-
-const expenseSummary: ExpenseSummary = {
-  toSubmit: 5467,
-  waitingApproval: 33674,
-  approved: 500,
-};
-
 export default function UserView() {
-  const [expenses] = useState<ExpenseEntry[]>(sampleExpenses);
+  const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
+  const [draftExpenses, setDraftExpenses] = useState<ExpenseEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [expenseSummary, setExpenseSummary] = useState<ExpenseSummary>({
+    toSubmit: 0,
+    waitingApproval: 0,
+    approved: 0,
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { user, company } = useAuth();
   const ocrService = OCRService.getInstance();
+
+  // Load user expenses on component mount
+  useEffect(() => {
+    loadExpenses();
+  }, []);
+
+  const loadExpenses = async () => {
+    try {
+      setIsLoading(true);
+      const data = await apiClient.getMyExpenses();
+      setExpenses(data);
+      
+      // Get draft expenses and total
+      const draftData = await apiClient.getDraftExpenses();
+      setDraftExpenses(draftData);
+      const draftTotal = await apiClient.getDraftExpensesTotal();
+      
+      // Calculate summary
+      const summary = data.reduce(
+        (acc, expense) => {
+          const amount = parseFloat(expense.amount);
+          if (expense.status === 'PENDING') {
+            acc.waitingApproval += amount;
+          } else if (expense.status === 'APPROVED') {
+            acc.approved += amount;
+          }
+          return acc;
+        },
+        { toSubmit: draftTotal, waitingApproval: 0, approved: 0 }
+      );
+      setExpenseSummary(summary);
+    } catch (error: any) {
+      console.error('Error loading expenses:', error);
+      toast.error('Failed to load expenses');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleBack = () => {
     window.history.back();
@@ -115,24 +159,45 @@ export default function UserView() {
     router.push("/user/new-expense");
   };
 
-  const formatCurrency = (amount: number) => {
-    return `${amount} rs`;
+  const handleSubmitDraft = async (expenseId: number) => {
+    try {
+      await apiClient.submitDraftExpense(expenseId);
+      toast.success('Draft expense submitted successfully!');
+      loadExpenses(); // Refresh the data
+    } catch (error: any) {
+      console.error('Error submitting draft:', error);
+      toast.error(error.message || 'Failed to submit draft expense');
+    }
+  };
+
+  const formatCurrency = (amount: string | number, currencySymbol?: string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return `${currencySymbol || company?.currency?.symbol || '₹'}${numAmount.toFixed(2)}`;
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Approved":
+      case "APPROVED":
         return "text-green-600 bg-green-50 border-green-200";
-      case "Rejected":
+      case "REJECTED":
         return "text-red-600 bg-red-50 border-red-200";
-      case "Waiting Approval":
+      case "PENDING":
         return "text-yellow-600 bg-yellow-50 border-yellow-200";
-      case "Submitted":
-        return "text-purple-600 bg-purple-50 border-purple-200";
-      case "Draft":
-        return "text-gray-600 bg-gray-50 border-gray-200";
       default:
         return "text-gray-600 bg-gray-50 border-gray-200";
+    }
+  };
+
+  const getStatusDisplayName = (status: string) => {
+    switch (status) {
+      case "APPROVED":
+        return "Approved";
+      case "REJECTED":
+        return "Rejected";
+      case "PENDING":
+        return "Waiting Approval";
+      default:
+        return status;
     }
   };
 
@@ -163,9 +228,11 @@ export default function UserView() {
           );
 
           // Show success notification
-          console.log("OCR completed for:", newFiles[i].file.name, ocrData);
-        } catch (error) {
-          console.error("OCR failed for:", newFiles[i].file.name, error);
+          console.log("Real OCR processing completed for:", newFiles[i].file.name, ocrData);
+          toast.success(`Receipt processed! Found: ${ocrData.vendor || 'Unknown vendor'}, Amount: ${ocrData.amount || 'N/A'}`);
+        } catch (error: any) {
+          console.error("Real OCR processing failed for:", newFiles[i].file.name, error);
+          toast.error(`OCR failed for ${newFiles[i].file.name}: ${error.message || 'Unknown error'}`);
 
           setUploadedFiles((prev) =>
             prev.map((item, index) =>
@@ -274,7 +341,7 @@ export default function UserView() {
                         </span>
                         {item.isProcessing && (
                           <span className="text-xs text-blue-600">
-                            Processing...
+                            Processing with OCR...
                           </span>
                         )}
                       </div>
@@ -322,9 +389,10 @@ export default function UserView() {
                           </div>
                         )}
                         <div className="flex justify-between items-center mt-3">
-                          <span className="text-xs text-gray-500">
-                            Confidence: {Math.round(item.ocrData.confidence)}%
-                          </span>
+                          <div className="text-xs text-gray-500">
+                            <div>OCR Confidence: {Math.round(item.ocrData.confidence)}%</div>
+                            <div className="text-green-600">✓ Processed with Tesseract.js</div>
+                          </div>
                           <Button
                             onClick={() => createExpenseFromOCR(item.ocrData!)}
                             size="sm"
@@ -338,8 +406,8 @@ export default function UserView() {
 
                     {item.hasError && (
                       <div className="mt-2 text-xs text-red-600">
-                        Failed to process receipt. Please try again or enter
-                        manually.
+                        Failed to process receipt with OCR. The image might be unclear or the text unreadable. 
+                        Please try again with a clearer image or enter the details manually.
                       </div>
                     )}
                   </div>
@@ -384,75 +452,154 @@ export default function UserView() {
           </div>
         </div>
 
+        {/* Draft Expenses Section */}
+        {draftExpenses.length > 0 && (
+          <div className="px-6 py-4 border-b bg-blue-50">
+            <h3 className="text-lg font-semibold text-blue-800 mb-3">
+              Draft Expenses ({draftExpenses.length})
+            </h3>
+            <div className="space-y-2">
+              {draftExpenses.map((expense) => (
+                <div key={expense.id} className="bg-white p-4 rounded-lg border border-blue-200 flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          {expense.description || 'No description'}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {new Date(expense.date).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })} • {expense.category || 'No category'}
+                        </p>
+                      </div>
+                      <div className="ml-auto">
+                        <span className="text-lg font-semibold text-gray-900">
+                          {formatCurrency(expense.amount, expense.company.currencySymbol)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/user/new-expense?draft=${expense.id}`)}
+                      className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleSubmitDraft(expense.id)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Submit
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b bg-gray-50">
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">
-                    Employee
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">
-                    Description
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">
-                    Date
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">
-                    Category
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">
-                    Paid By
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">
-                    Remarks
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">
-                    Amount
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">
-                    Status
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expenses.map((expense) => (
-                  <TableRow
-                    key={expense.id}
-                    className="border-b hover:bg-gray-50"
-                  >
-                    <TableCell className="py-4 px-6 font-medium">
-                      {expense.employee}
-                    </TableCell>
-                    <TableCell className="py-4 px-6">
-                      {expense.description}
-                    </TableCell>
-                    <TableCell className="py-4 px-6">{expense.date}</TableCell>
-                    <TableCell className="py-4 px-6">
-                      {expense.category}
-                    </TableCell>
-                    <TableCell className="py-4 px-6">
-                      {expense.paidBy}
-                    </TableCell>
-                    <TableCell className="py-4 px-6">
-                      {expense.remarks}
-                    </TableCell>
-                    <TableCell className="py-4 px-6 font-semibold">
-                      {formatCurrency(expense.amount)}
-                    </TableCell>
-                    <TableCell className="py-4 px-6">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
-                          expense.status
-                        )}`}
-                      >
-                        {expense.status}
-                      </span>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span className="ml-2">Loading expenses...</span>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b bg-gray-50">
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">
+                      Description
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">
+                      Date
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">
+                      Category
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">
+                      Amount
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">
+                      Status
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">
+                      Approvals
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {expenses.map((expense) => (
+                    <TableRow
+                      key={expense.id}
+                      className="border-b hover:bg-gray-50"
+                    >
+                      <TableCell className="py-4 px-6">
+                        {expense.description || 'N/A'}
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        {new Date(expense.date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        {expense.category || 'N/A'}
+                      </TableCell>
+                      <TableCell className="py-4 px-6 font-semibold">
+                        <div>
+                          {formatCurrency(expense.amount, expense.company.currencySymbol)}
+                        </div>
+                        {expense.currencyCode !== expense.company.currencyCode && expense.convertedAmount && (
+                          <div className="text-sm text-gray-500">
+                            {expense.currencyCode} {parseFloat(expense.amount).toFixed(2)}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                            expense.status
+                          )}`}
+                        >
+                          {getStatusDisplayName(expense.status)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <div className="text-sm">
+                          {expense.approvals.length > 0 ? (
+                            <div>
+                              {expense.approvals.map((approval) => (
+                                <div key={approval.id} className="mb-1">
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                                    approval.status === 'APPROVED' ? 'bg-green-500' :
+                                    approval.status === 'REJECTED' ? 'bg-red-500' : 'bg-yellow-500'
+                                  }`}></span>
+                                  <span className="text-xs">
+                                    {approval.approver.name} ({approval.approver.role})
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">No approvals yet</span>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
 
           {expenses.length === 0 && (

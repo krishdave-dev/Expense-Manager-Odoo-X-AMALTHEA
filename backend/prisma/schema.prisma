@@ -83,6 +83,7 @@ model Expense {
 }
 
 enum ExpenseStatus {
+  DRAFT
   PENDING
   APPROVED
   REJECTED

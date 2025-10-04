@@ -1,5 +1,6 @@
 // src/expenses/expenses.controller.ts
-import { Body, Controller, Get, Post, Request, UseGuards, Param, ParseIntPipe, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, UseGuards, Param, ParseIntPipe, Patch, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,9 +19,34 @@ export class ExpensesController {
     return this.expensesService.createExpense(user.id, dto);
   }
 
+  @Post('draft')
+  createDraft(@Body() dto: CreateExpenseDto, @CurrentUser() user: any) {
+    return this.expensesService.createExpense(user.id, dto, true);
+  }
+
   @Get('my')
   getMy(@CurrentUser() user: any) {
     return this.expensesService.getMyExpenses(user.id);
+  }
+
+  @Get('my/drafts')
+  getMyDrafts(@CurrentUser() user: any) {
+    return this.expensesService.getDraftExpenses(user.id);
+  }
+
+  @Get('my/drafts/total')
+  getMyDraftsTotal(@CurrentUser() user: any) {
+    return this.expensesService.getDraftExpensesTotal(user.id);
+  }
+
+  @Post(':id/submit')
+  submitDraft(@Param('id', ParseIntPipe) expenseId: number, @CurrentUser() user: any) {
+    return this.expensesService.submitDraftExpense(expenseId, user.id);
+  }
+
+  @Patch(':id')
+  updateDraft(@Param('id', ParseIntPipe) expenseId: number, @Body() dto: CreateExpenseDto, @CurrentUser() user: any) {
+    return this.expensesService.updateDraftExpense(expenseId, user.id, dto);
   }
 
   /**
@@ -52,5 +78,17 @@ export class ExpensesController {
     @CurrentUser() user: any
   ) {
     return this.expensesService.overrideApproval(expenseId, user.id, status, comments);
+  }
+
+  /**
+   * Process receipt with OCR
+   */
+  @Post('ocr/process-receipt')
+  @UseInterceptors(FileInterceptor('file'))
+  processReceipt(
+    @UploadedFile() file: any,
+    @CurrentUser() user: any
+  ) {
+    return this.expensesService.processReceiptOCR(file, user.id);
   }
 }

@@ -74,7 +74,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       return { 
         success: true, 
-        needsPasswordChange 
+        needsPasswordChange,
+        user: response.user
       };
     } catch (error) {
       const apiError = error as ApiError;

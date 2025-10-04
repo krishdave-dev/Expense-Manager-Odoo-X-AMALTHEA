@@ -26,7 +26,7 @@ import { useAuth } from "@/lib/auth-context";
 
 export default function LoginSection() {
   const router = useRouter();
-  const { login, changePassword, isLoading } = useAuth();
+  const { login, changePassword, user, isLoading } = useAuth();
   
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -73,8 +73,15 @@ export default function LoginSection() {
           // User has temporary password, show change password dialog
           setIsChangingPassword(true);
         } else {
-          // Login successful, redirect to dashboard
-          router.push('/admin');
+          // Login successful, redirect based on user role
+          const loggedUser = (result as any).user;
+          if (loggedUser?.role === 'ADMIN') {
+            router.push('/admin');
+          } else if (loggedUser?.role === 'MANAGER') {
+            router.push('/manager');
+          } else {
+            router.push('/user');
+          }
         }
       } else {
         setError(result.error || "Login failed");
@@ -102,11 +109,19 @@ export default function LoginSection() {
       const result = await changePassword(formData.password, newPasswordData.newPassword);
       
       if (result.success) {
-        // Password changed successfully, redirect to dashboard
+        // Password changed successfully, redirect based on user role
         setIsChangingPassword(false);
         setFormData({ email: "", password: "" });
         setNewPasswordData({ newPassword: "", confirmPassword: "" });
-        router.push('/admin');
+        
+        // Redirect based on user role
+        if (user?.role === 'ADMIN') {
+          router.push('/admin');
+        } else if (user?.role === 'MANAGER') {
+          router.push('/manager');
+        } else {
+          router.push('/user');
+        }
       } else {
         setError(result.error || "Password change failed");
       }

@@ -32,8 +32,10 @@ export default function ProtectedRoute({
         // Redirect based on user role
         if (user?.role === 'ADMIN') {
           router.push('/admin');
+        } else if (user?.role === 'MANAGER') {
+          router.push('/manager');
         } else {
-          router.push('/dashboard');
+          router.push('/user');
         }
         return;
       }

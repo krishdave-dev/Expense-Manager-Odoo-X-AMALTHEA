@@ -5,7 +5,7 @@ export declare class ExpensesService {
     private prisma;
     private exchangeRatesService;
     constructor(prisma: PrismaService, exchangeRatesService: ExchangeRatesService);
-    createExpense(employeeId: number, dto: CreateExpenseDto): Promise<{
+    createExpense(employeeId: number, dto: CreateExpenseDto, isDraft?: boolean): Promise<{
         category: string | null;
         description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
@@ -42,6 +42,58 @@ export declare class ExpensesService {
         approvals: any;
         attachments: any;
     }[]>;
+    getDraftExpenses(employeeId: number): Promise<{
+        id: any;
+        employeeId: any;
+        companyId: any;
+        category: any;
+        description: any;
+        amount: any;
+        currencyCode: any;
+        convertedAmount: any;
+        date: any;
+        status: any;
+        createdAt: any;
+        updatedAt: any;
+        employee: any;
+        company: {
+            id: any;
+            name: any;
+            currencyCode: any;
+            currencySymbol: any;
+        };
+        approvals: any;
+        attachments: any;
+    }[]>;
+    getDraftExpensesTotal(employeeId: number): Promise<import("@prisma/client/runtime/library").Decimal | 0>;
+    submitDraftExpense(expenseId: number, employeeId: number): Promise<{
+        category: string | null;
+        description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        currency_code: string;
+        converted_amount: import("@prisma/client/runtime/library").Decimal | null;
+        date: Date;
+        status: import(".prisma/client").$Enums.ExpenseStatus;
+        created_at: Date;
+        updated_at: Date;
+        id: number;
+        employee_id: number;
+        company_id: number;
+    }>;
+    updateDraftExpense(expenseId: number, employeeId: number, dto: CreateExpenseDto): Promise<{
+        category: string | null;
+        description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        currency_code: string;
+        converted_amount: import("@prisma/client/runtime/library").Decimal | null;
+        date: Date;
+        status: import(".prisma/client").$Enums.ExpenseStatus;
+        created_at: Date;
+        updated_at: Date;
+        id: number;
+        employee_id: number;
+        company_id: number;
+    }>;
     getAllCompanyExpenses(adminUserId: number): Promise<{
         expenses: {
             id: any;
@@ -108,5 +160,31 @@ export declare class ExpensesService {
             company_id: number;
         };
     }>;
+    processReceiptOCR(file: any, userId: number): Promise<{
+        success: boolean;
+        data: {
+            amount: number;
+            date: string;
+            description: string;
+            vendor: string;
+            category: string;
+            confidence: number;
+            rawText: any;
+            processingTime: number;
+        };
+        message: string;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: string;
+        data?: undefined;
+        message?: undefined;
+    }>;
+    private parseReceiptText;
+    private extractAmountFromText;
+    private extractDateFromText;
+    private extractVendorFromText;
+    private extractDescriptionFromText;
+    private categorizeFromText;
     private transformExpenses;
 }
