@@ -50,6 +50,17 @@ export class AuthService {
       },
     });
 
+    // Create default approval flow (admin approves all expenses)
+    await this.prisma.approvalFlow.create({
+      data: {
+        company_id: company.id,
+        step_order: 1,
+        approver_role: 'ADMIN',
+        specific_user_id: user.id,
+        is_manager_approver: false,
+      },
+    });
+
     return {
       message: 'Company and Admin created successfully',
       companyId: company.id,

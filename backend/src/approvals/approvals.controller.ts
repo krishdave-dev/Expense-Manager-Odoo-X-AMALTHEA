@@ -7,15 +7,25 @@ import { ApproveExpenseDto } from './dto/approve-expense.dto';
 export class ApprovalsController {
   constructor(private approvalsService: ApprovalsService) {}
 
-  @Post(':id')
-  approve(@Param('id') expenseId: string, @Body() dto: ApproveExpenseDto, @Request() req) {
-    const approverId = 2; // TODO: replace with req.user.id
+  @Post(':expenseId/approve')
+  approve(@Param('expenseId') expenseId: string, @Body() dto: ApproveExpenseDto, @Request() req) {
+    const approverId = 1; // TODO: replace with req.user.id (using admin user for now)
     return this.approvalsService.approveExpense(+expenseId, approverId, dto);
   }
 
   @Get('pending')
   getPending(@Request() req) {
-    const approverId = 2; // TODO: replace with req.user.id
+    const approverId = 1; // TODO: replace with req.user.id (using admin user for now)
     return this.approvalsService.getPendingApprovals(approverId);
+  }
+
+  @Post('setup-flow/:companyId')
+  async setupApprovalFlow(@Param('companyId') companyId: string) {
+    return this.approvalsService.setupDefaultApprovalFlow(+companyId);
+  }
+
+  @Get('debug/all')
+  async getAllApprovals() {
+    return this.approvalsService.getAllApprovalsDebug();
   }
 }
