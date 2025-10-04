@@ -132,6 +132,85 @@ export declare class ExpensesController {
         }[];
         total: number;
     }>;
+    getTeamExpenses(user: any): Promise<{
+        expenses: {
+            id: any;
+            employeeId: any;
+            companyId: any;
+            category: any;
+            description: any;
+            amount: any;
+            currencyCode: any;
+            convertedAmount: any;
+            date: any;
+            status: any;
+            createdAt: any;
+            updatedAt: any;
+            employee: any;
+            company: {
+                id: any;
+                name: any;
+                currencyCode: any;
+                currencySymbol: any;
+            };
+            approvals: any;
+            attachments: any;
+        }[];
+        total: number;
+        debug: {
+            managerId: number;
+            userRole: string;
+            whereClause: any;
+            rawExpenseCount: number;
+        };
+    }>;
+    getManagerDebugInfo(user: any): Promise<{
+        manager: {
+            id: number;
+            name: string;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+            companyId: number;
+            company: {
+                currency_code: string;
+                created_at: Date;
+                updated_at: Date;
+                id: number;
+                name: string;
+                country: string | null;
+                currency_symbol: string | null;
+            };
+        };
+        managerRelations: {
+            employeeId: number;
+            employee: {
+                id: number;
+                name: string;
+                email: string;
+                role: import(".prisma/client").$Enums.Role;
+            };
+        }[];
+        allCompanyEmployees: {
+            id: number;
+            name: string;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+        }[];
+        recentExpenses: {
+            id: number;
+            employeeId: number;
+            employeeName: string;
+            amount: string;
+            description: string;
+            status: import(".prisma/client").$Enums.ExpenseStatus;
+            date: Date;
+        }[];
+        stats: {
+            totalManagerRelations: number;
+            totalCompanyEmployees: number;
+            totalCompanyExpenses: number;
+        };
+    }>;
     getExpenseById(expenseId: number, user: any): Promise<{
         id: any;
         employeeId: any;

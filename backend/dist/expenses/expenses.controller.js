@@ -50,6 +50,12 @@ let ExpensesController = class ExpensesController {
     getAllCompanyExpenses(user) {
         return this.expensesService.getAllCompanyExpenses(user.id);
     }
+    getTeamExpenses(user) {
+        return this.expensesService.getTeamExpenses(user.id, user.role);
+    }
+    getManagerDebugInfo(user) {
+        return this.expensesService.getManagerDebugInfo(user.id);
+    }
     getExpenseById(expenseId, user) {
         return this.expensesService.getExpenseById(expenseId, user.id, user.role);
     }
@@ -123,6 +129,22 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ExpensesController.prototype, "getAllCompanyExpenses", null);
+__decorate([
+    (0, common_1.Get)('team'),
+    (0, roles_decorators_1.Roles)(client_1.Role.MANAGER, client_1.Role.ADMIN),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ExpensesController.prototype, "getTeamExpenses", null);
+__decorate([
+    (0, common_1.Get)('debug/manager-info'),
+    (0, roles_decorators_1.Roles)(client_1.Role.MANAGER, client_1.Role.ADMIN),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ExpensesController.prototype, "getManagerDebugInfo", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),

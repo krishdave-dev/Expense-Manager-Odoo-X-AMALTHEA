@@ -31,10 +31,10 @@ export declare class ApprovalsService {
             createdAt: string;
             updatedAt: string;
             employee: {
-                id: number;
                 email: string;
-                company_id: number;
                 name: string;
+                id: number;
+                company_id: number;
                 password_hash: string;
                 role: import(".prisma/client").$Enums.Role;
                 is_active: boolean;
@@ -67,19 +67,19 @@ export declare class ApprovalsService {
         approvals: ({
             expense: {
                 company: {
-                    id: number;
                     name: string;
+                    country: string | null;
+                    id: number;
                     created_at: Date;
                     updated_at: Date;
-                    country: string | null;
                     currency_code: string;
                     currency_symbol: string | null;
                 };
                 employee: {
-                    id: number;
                     email: string;
-                    company_id: number;
                     name: string;
+                    id: number;
+                    company_id: number;
                     password_hash: string;
                     role: import(".prisma/client").$Enums.Role;
                     is_active: boolean;
@@ -88,24 +88,24 @@ export declare class ApprovalsService {
                     updated_at: Date;
                 };
             } & {
+                date: Date;
                 id: number;
                 company_id: number;
                 created_at: Date;
                 updated_at: Date;
                 currency_code: string;
                 employee_id: number;
+                amount: import("@prisma/client/runtime/library").Decimal;
                 category: string | null;
                 description: string | null;
-                amount: import("@prisma/client/runtime/library").Decimal;
                 converted_amount: import("@prisma/client/runtime/library").Decimal | null;
-                date: Date;
                 status: import(".prisma/client").$Enums.ExpenseStatus;
             };
             approver: {
-                id: number;
                 email: string;
-                company_id: number;
                 name: string;
+                id: number;
+                company_id: number;
                 password_hash: string;
                 role: import(".prisma/client").$Enums.Role;
                 is_active: boolean;
@@ -151,9 +151,9 @@ export declare class ApprovalsService {
             isManagerApprover: boolean;
             createdAt: string;
             specificUser: {
-                id: number;
                 email: string;
                 name: string;
+                id: number;
                 role: import(".prisma/client").$Enums.Role;
             };
         };
@@ -169,9 +169,9 @@ export declare class ApprovalsService {
             isManagerApprover: boolean;
             createdAt: string;
             specificUser: {
-                id: number;
                 email: string;
                 name: string;
+                id: number;
                 role: import(".prisma/client").$Enums.Role;
             };
         };
@@ -205,9 +205,9 @@ export declare class ApprovalsService {
             hybridCondition: import("@prisma/client/runtime/library").JsonValue;
             createdAt: string;
             specificApprover: {
-                id: number;
                 email: string;
                 name: string;
+                id: number;
                 role: import(".prisma/client").$Enums.Role;
             };
         };
@@ -223,9 +223,9 @@ export declare class ApprovalsService {
             hybridCondition: import("@prisma/client/runtime/library").JsonValue;
             createdAt: string;
             specificApprover: {
-                id: number;
                 email: string;
                 name: string;
+                id: number;
                 role: import(".prisma/client").$Enums.Role;
             };
         };

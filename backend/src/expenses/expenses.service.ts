@@ -364,6 +364,172 @@ export class ExpensesService {
     };
   }
 
+  async getTeamExpenses(managerId: number, userRole: string) {
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+    });
+
+    if (!manager) {
+      throw new Error('Manager not found');
+    }
+
+    let whereClause: any = {};
+
+    if (userRole === 'ADMIN') {
+      // Admin can see all company expenses
+      whereClause = { company_id: manager.company_id };
+    } else if (userRole === 'MANAGER') {
+      // Manager can see their team's expenses
+      // First get all employees under this manager
+      const managerRelations = await this.prisma.managerRelation.findMany({
+        where: { manager_id: managerId },
+        select: { employee_id: true },
+      });
+
+      const employeeIds = managerRelations.map(rel => rel.employee_id);
+      
+      console.log(`Manager ${managerId} has ${employeeIds.length} assigned employees:`, employeeIds);
+      
+      if (employeeIds.length === 0) {
+        // If no explicit manager-employee relationships exist, 
+        // show all company employees' expenses (fallback behavior)
+        console.log('No explicit manager relations found, showing all company expenses as fallback');
+        whereClause = { company_id: manager.company_id };
+      } else {
+        whereClause = {
+          employee_id: { in: employeeIds },
+          company_id: manager.company_id,
+        };
+      }
+    } else {
+      throw new Error('Only managers and admins can view team expenses');
+    }
+
+    console.log('Where clause for team expenses:', JSON.stringify(whereClause, null, 2));
+
+    const expenses = await this.prisma.expense.findMany({
+      where: whereClause,
+      include: {
+        employee: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        company: {
+          select: {
+            id: true,
+            name: true,
+            currency_code: true,
+            currency_symbol: true,
+          },
+        },
+        approvals: {
+          include: {
+            approver: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+        },
+        attachments: true,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    console.log(`Found ${expenses.length} expenses for manager ${managerId} (${userRole})`);
+
+    return {
+      expenses: this.transformExpenses(expenses),
+      total: expenses.length,
+      debug: {
+        managerId,
+        userRole,
+        whereClause,
+        rawExpenseCount: expenses.length,
+      },
+    };
+  }
+
+  async getManagerDebugInfo(managerId: number) {
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+      include: {
+        company: true,
+      },
+    });
+
+    if (!manager) {
+      throw new Error('Manager not found');
+    }
+
+    // Get manager relationships
+    const managerRelations = await this.prisma.managerRelation.findMany({
+      where: { manager_id: managerId },
+      include: {
+        employee: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+      },
+    });
+
+    // Get all company employees
+    const allCompanyEmployees = await this.prisma.user.findMany({
+      where: { 
+        company_id: manager.company_id,
+        role: 'EMPLOYEE',
+      },
+      select: { id: true, name: true, email: true, role: true },
+    });
+
+    // Get all company expenses
+    const allCompanyExpenses = await this.prisma.expense.findMany({
+      where: { company_id: manager.company_id },
+      include: {
+        employee: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+      take: 10, // Limit for debugging
+    });
+
+    return {
+      manager: {
+        id: manager.id,
+        name: manager.name,
+        email: manager.email,
+        role: manager.role,
+        companyId: manager.company_id,
+        company: manager.company,
+      },
+      managerRelations: managerRelations.map(rel => ({
+        employeeId: rel.employee_id,
+        employee: rel.employee,
+      })),
+      allCompanyEmployees,
+      recentExpenses: allCompanyExpenses.map(expense => ({
+        id: expense.id,
+        employeeId: expense.employee_id,
+        employeeName: expense.employee.name,
+        amount: expense.amount.toString(),
+        description: expense.description,
+        status: expense.status,
+        date: expense.date,
+      })),
+      stats: {
+        totalManagerRelations: managerRelations.length,
+        totalCompanyEmployees: allCompanyEmployees.length,
+        totalCompanyExpenses: allCompanyExpenses.length,
+      },
+    };
+  }
+
   /**
    * Get expense by ID with permission checks
    */

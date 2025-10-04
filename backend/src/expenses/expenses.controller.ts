@@ -59,6 +59,24 @@ export class ExpensesController {
   }
 
   /**
+   * Get team expenses (Manager can view their team's expenses)
+   */
+  @Get('team')
+  @Roles(Role.MANAGER, Role.ADMIN)
+  getTeamExpenses(@CurrentUser() user: any) {
+    return this.expensesService.getTeamExpenses(user.id, user.role);
+  }
+
+  /**
+   * Debug endpoint to check manager relationships
+   */
+  @Get('debug/manager-info')
+  @Roles(Role.MANAGER, Role.ADMIN)
+  getManagerDebugInfo(@CurrentUser() user: any) {
+    return this.expensesService.getManagerDebugInfo(user.id);
+  }
+
+  /**
    * Get expense by ID (Admin can view any, others only their own)
    */
   @Get(':id')
