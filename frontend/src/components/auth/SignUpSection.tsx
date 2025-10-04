@@ -296,7 +296,7 @@ export default function SignUpSection() {
                 placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                className="pl-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                 required
                 disabled={authLoading}
               />
@@ -315,7 +315,7 @@ export default function SignUpSection() {
                 placeholder="Enter your password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                className="pl-10 pr-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                 required
                 disabled={authLoading}
               />
@@ -345,7 +345,7 @@ export default function SignUpSection() {
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                className="pl-10 pr-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                 required
                 disabled={authLoading}
               />
@@ -376,7 +376,7 @@ export default function SignUpSection() {
                   value={formData.country ? formData.country.name : searchTerm}
                   onChange={handleSearchChange}
                   onFocus={() => setIsDropdownOpen(true)}
-                  className="pl-10 pr-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="pl-10 pr-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                   disabled={loading}
                   required
                 />
@@ -392,7 +392,7 @@ export default function SignUpSection() {
                         <div
                           key={country.name.common}
                           onClick={() => handleCountrySelect(country)}
-                          className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          className="px-3 py-2 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                         >
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-medium text-gray-900">
@@ -428,11 +428,11 @@ export default function SignUpSection() {
               </div>
 
               {formData.country && (
-                <div className="mt-2 p-2 bg-blue-50 rounded-md">
-                  <div className="text-xs text-blue-700">
+                <div className="mt-2 p-2 bg-purple-50 rounded-md">
+                  <div className="text-xs text-purple-700">
                     <strong>Selected:</strong> {formData.country.name}
                   </div>
-                  <div className="text-xs text-blue-600">
+                  <div className="text-xs text-purple-600">
                     <strong>Base Currency:</strong>{" "}
                     {formData.country.currency.name} (
                     {formData.country.currency.symbol}{" "}
@@ -464,7 +464,7 @@ export default function SignUpSection() {
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+              className="text-purple-600 hover:text-purple-800 font-medium hover:underline"
             >
               Sign in
             </Link>

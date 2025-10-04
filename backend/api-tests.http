@@ -1,0 +1,70 @@
+# Expense Manager API Tests
+# Make sure your server is running on http://localhost:3000
+
+### Test Auth - Signup
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "email": "admin@company.com",
+  "password": "password123",
+  "name": "John Doe",
+  "country": "United States"
+}
+
+### Test Approvals - Setup Approval Flow (run this after signup)
+POST http://localhost:3000/approvals/setup-flow/1
+
+### Test Expenses - Create Expense
+POST http://localhost:3000/expenses
+Content-Type: application/json
+
+{
+  "amount": 100.50,
+  "currency_code": "USD",
+  "category": "Travel",
+  "description": "Business trip taxi fare",
+  "date": "2024-10-04"
+}
+
+### Test Expenses - Create Second Expense
+POST http://localhost:3000/expenses
+Content-Type: application/json
+
+{
+  "amount": 250.00,
+  "currency_code": "EUR",
+  "category": "Meals",
+  "description": "Client dinner",
+  "date": "2024-10-04"
+}
+
+### Test Expenses - Get My Expenses
+GET http://localhost:3000/expenses/my
+
+### Test Approvals - Get Pending Approvals
+GET http://localhost:3000/approvals/pending
+
+### Test Approvals - Debug All Approvals
+GET http://localhost:3000/approvals/debug/all
+
+### Test Approvals - Approve Expense ID 1
+POST http://localhost:3000/approvals/1/approve
+Content-Type: application/json
+
+{
+  "status": "APPROVED",
+  "comments": "Business expense approved - valid receipt"
+}
+
+### Test Approvals - Reject Expense ID 2
+POST http://localhost:3000/approvals/2/approve
+Content-Type: application/json
+
+{
+  "status": "REJECTED",
+  "comments": "Missing receipt - please resubmit"
+}
+
+### Test App - Health Check
+GET http://localhost:3000

@@ -19,40 +19,113 @@ export declare class ApprovalsController {
                 currency_symbol: string | null;
             };
             employee: {
-                email: string;
                 name: string;
+                email: string;
+                created_at: Date;
+                updated_at: Date;
                 id: number;
-                company_id: number;
                 password_hash: string;
                 role: import(".prisma/client").$Enums.Role;
                 is_active: boolean;
                 is_temp_password: boolean;
-                created_at: Date;
-                updated_at: Date;
+                company_id: number;
             };
         } & {
-            date: Date;
-            id: number;
-            company_id: number;
+            currency_code: string;
             created_at: Date;
             updated_at: Date;
-            currency_code: string;
+            id: number;
+            company_id: number;
             amount: import("@prisma/client/runtime/library").Decimal;
             category: string | null;
             description: string | null;
+            date: Date;
             converted_amount: import("@prisma/client/runtime/library").Decimal | null;
             status: import(".prisma/client").$Enums.ExpenseStatus;
             employee_id: number;
         };
     } & {
-        id: number;
         created_at: Date;
         updated_at: Date;
+        id: number;
         status: import(".prisma/client").$Enums.ApprovalStatus;
         step_order: number | null;
-        comments: string | null;
-        approved_at: Date | null;
         expense_id: number;
         approver_id: number;
+        comments: string | null;
+        approved_at: Date | null;
     })[]>;
+    setupApprovalFlow(companyId: string): Promise<{
+        message: string;
+        flow: {
+            created_at: Date;
+            id: number;
+            company_id: number;
+            step_order: number;
+            approver_role: import(".prisma/client").$Enums.ApproverRole;
+            is_manager_approver: boolean;
+            specific_user_id: number | null;
+        };
+    }>;
+    getAllApprovals(): Promise<{
+        total: number;
+        approvals: ({
+            expense: {
+                company: {
+                    name: string;
+                    country: string | null;
+                    currency_code: string;
+                    currency_symbol: string | null;
+                    created_at: Date;
+                    updated_at: Date;
+                    id: number;
+                };
+                employee: {
+                    email: string;
+                    name: string;
+                    created_at: Date;
+                    updated_at: Date;
+                    id: number;
+                    password_hash: string;
+                    role: import(".prisma/client").$Enums.Role;
+                    is_active: boolean;
+                    company_id: number;
+                };
+            } & {
+                currency_code: string;
+                created_at: Date;
+                updated_at: Date;
+                id: number;
+                company_id: number;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                category: string | null;
+                description: string | null;
+                date: Date;
+                converted_amount: import("@prisma/client/runtime/library").Decimal | null;
+                status: import(".prisma/client").$Enums.ExpenseStatus;
+                employee_id: number;
+            };
+            approver: {
+                email: string;
+                name: string;
+                created_at: Date;
+                updated_at: Date;
+                id: number;
+                password_hash: string;
+                role: import(".prisma/client").$Enums.Role;
+                is_active: boolean;
+                company_id: number;
+            };
+        } & {
+            created_at: Date;
+            updated_at: Date;
+            id: number;
+            step_order: number | null;
+            status: import(".prisma/client").$Enums.ApprovalStatus;
+            comments: string | null;
+            approved_at: Date | null;
+            expense_id: number;
+            approver_id: number;
+        })[];
+    }>;
 }

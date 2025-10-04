@@ -80,11 +80,11 @@ export default function ForgotPasswordSection() {
         </CardHeader>
 
         <CardContent className="space-y-4 text-center">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
+          <div className="p-4 bg-purple-50 rounded-lg">
+            <p className="text-sm text-purple-800">
               A temporary password has been sent to:
             </p>
-            <p className="font-medium text-blue-900 mt-1">{email}</p>
+            <p className="font-medium text-purple-900 mt-1">{email}</p>
           </div>
 
           <div className="text-sm text-gray-600 space-y-2">
@@ -96,7 +96,7 @@ export default function ForgotPasswordSection() {
 
         <CardFooter className="flex flex-col space-y-4">
           <Link href="/login" className="w-full">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200">
+            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200">
               Go to Login
             </Button>
           </Link>
@@ -139,7 +139,7 @@ export default function ForgotPasswordSection() {
                 placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                className="pl-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-10"
                 required
               />
             </div>
@@ -158,7 +158,7 @@ export default function ForgotPasswordSection() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
           >
             {isLoading ? "Sending..." : "Send Temporary Password"}
           </Button>

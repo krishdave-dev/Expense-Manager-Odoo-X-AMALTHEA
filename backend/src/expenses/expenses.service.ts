@@ -41,33 +41,52 @@ export class ExpensesService {
         orderBy: { step_order: 'asc' },
       });
 
-      for (const flow of flows) {
-        let approverId: number | null = null;
-
-        if (flow.is_manager_approver) {
-          // For now, assume employee's manager = company admin (simplified)
-          const manager = await tx.user.findFirst({
-            where: { company_id: company.id, role: 'MANAGER' },
-          });
-          if (manager) approverId = manager.id;
-        } else if (flow.specific_user_id) {
-          approverId = flow.specific_user_id;
-        } else {
-          const user = await tx.user.findFirst({
-            where: { company_id: company.id, role: flow.approver_role as any },
-          });
-          if (user) approverId = user.id;
-        }
-
-        if (approverId) {
+      // If no approval flows exist, create a default one with the admin user
+      if (flows.length === 0) {
+        const adminUser = await tx.user.findFirst({
+          where: { company_id: company.id, role: 'ADMIN' },
+        });
+        
+        if (adminUser) {
           await tx.expenseApproval.create({
             data: {
               expense_id: expense.id,
-              approver_id: approverId,
-              step_order: flow.step_order,
+              approver_id: adminUser.id,
+              step_order: 1,
               status: 'PENDING',
             },
           });
+        }
+      } else {
+        // Process existing approval flows
+        for (const flow of flows) {
+          let approverId: number | null = null;
+
+          if (flow.is_manager_approver) {
+            // For now, assume employee's manager = company admin (simplified)
+            const manager = await tx.user.findFirst({
+              where: { company_id: company.id, role: 'MANAGER' },
+            });
+            if (manager) approverId = manager.id;
+          } else if (flow.specific_user_id) {
+            approverId = flow.specific_user_id;
+          } else {
+            const user = await tx.user.findFirst({
+              where: { company_id: company.id, role: flow.approver_role as any },
+            });
+            if (user) approverId = user.id;
+          }
+
+          if (approverId) {
+            await tx.expenseApproval.create({
+              data: {
+                expense_id: expense.id,
+                approver_id: approverId,
+                step_order: flow.step_order,
+                status: 'PENDING',
+              },
+            });
+          }
         }
       }
     });
