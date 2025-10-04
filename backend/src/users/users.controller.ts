@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Patch, Param, ParseIntPipe, UseGuards, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorators';
@@ -52,6 +53,19 @@ export class UsersController {
     @Body('isActive') isActive: boolean,
   ) {
     return this.usersService.updateUserStatus(user.id, targetUserId, isActive);
+  }
+
+  /**
+   * Update user role (Admin only)
+   */
+  @Patch(':id/role')
+  @Roles(Role.ADMIN)
+  async updateUserRole(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) targetUserId: number,
+    @Body() updateRoleDto: UpdateRoleDto,
+  ) {
+    return this.usersService.updateUserRole(user.id, targetUserId, updateRoleDto.role);
   }
 
   /**

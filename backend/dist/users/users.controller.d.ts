@@ -1,5 +1,6 @@
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 export declare class UsersController {
     private usersService;
     constructor(usersService: UsersService);
@@ -97,6 +98,19 @@ export declare class UsersController {
         };
         emailSent: boolean;
         emailError: string;
+    }>;
+    updateUserRole(user: any, targetUserId: number, updateRoleDto: UpdateRoleDto): Promise<{
+        message: string;
+        user: {
+            id: number;
+            name: string;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+            companyId: number;
+            isActive: boolean;
+            isTempPassword: boolean;
+            updatedAt: string;
+        };
     }>;
     assignManager(user: any, employeeId: number, managerId: number): Promise<{
         message: string;

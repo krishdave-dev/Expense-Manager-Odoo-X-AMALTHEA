@@ -167,6 +167,16 @@ class ApiClient {
     });
   }
 
+  async updateUserRole(userId: number, role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE'): Promise<{
+    message: string;
+    user: User;
+  }> {
+    return this.request(`/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    });
+  }
+
   // Manager-Employee Relationships
   async assignManager(employeeId: number, managerId: number): Promise<{
     message: string;

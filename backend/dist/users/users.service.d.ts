@@ -123,6 +123,19 @@ export declare class UsersService {
     removeManager(adminId: number, employeeId: number, managerId: number): Promise<{
         message: string;
     }>;
+    updateUserRole(adminUserId: number, targetUserId: number, newRole: string): Promise<{
+        message: string;
+        user: {
+            id: number;
+            name: string;
+            email: string;
+            role: import(".prisma/client").$Enums.Role;
+            companyId: number;
+            isActive: boolean;
+            isTempPassword: boolean;
+            updatedAt: string;
+        };
+    }>;
     getUserManagers(requesterId: number, userId: number): Promise<{
         id: number;
         employeeId: number;

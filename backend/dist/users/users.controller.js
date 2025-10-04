@@ -16,6 +16,7 @@ exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
+const update_role_dto_1 = require("./dto/update-role.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorators_1 = require("../common/decorators/roles.decorators");
@@ -36,6 +37,9 @@ let UsersController = class UsersController {
     }
     async updateUserStatus(user, targetUserId, isActive) {
         return this.usersService.updateUserStatus(user.id, targetUserId, isActive);
+    }
+    async updateUserRole(user, targetUserId, updateRoleDto) {
+        return this.usersService.updateUserRole(user.id, targetUserId, updateRoleDto.role);
     }
     async assignManager(user, employeeId, managerId) {
         return this.usersService.assignManager(user.id, employeeId, managerId);
@@ -85,6 +89,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Boolean]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateUserStatus", null);
+__decorate([
+    (0, common_1.Patch)(':id/role'),
+    (0, roles_decorators_1.Roles)(client_1.Role.ADMIN),
+    __param(0, (0, user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, update_role_dto_1.UpdateRoleDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateUserRole", null);
 __decorate([
     (0, common_1.Post)(':employeeId/manager/:managerId'),
     (0, roles_decorators_1.Roles)(client_1.Role.ADMIN),

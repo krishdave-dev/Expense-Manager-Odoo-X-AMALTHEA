@@ -21,6 +21,7 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
+  Edit3,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { apiClient, User, CreateUserData } from '@/lib/api-client';
@@ -37,6 +38,11 @@ export default function AdminView() {
   const [showManagerDialog, setShowManagerDialog] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
   const [managerAssignLoading, setManagerAssignLoading] = useState(false);
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedCurrentRole, setSelectedCurrentRole] = useState<'ADMIN' | 'MANAGER' | 'EMPLOYEE' | ''>('');
+  const [newRole, setNewRole] = useState<'ADMIN' | 'MANAGER' | 'EMPLOYEE'>('EMPLOYEE');
+  const [roleUpdateLoading, setRoleUpdateLoading] = useState(false);
   
   const [newUserData, setNewUserData] = useState<CreateUserData>({
     name: '',
@@ -166,6 +172,37 @@ export default function AdminView() {
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (error: any) {
       setError(error.message || 'Failed to remove manager');
+    }
+  };
+
+  const handleRoleChange = (userId: number, currentRole: 'ADMIN' | 'MANAGER' | 'EMPLOYEE') => {
+    setSelectedUserId(userId);
+    setSelectedCurrentRole(currentRole);
+    setNewRole(currentRole); // Default to current role
+    setShowRoleDialog(true);
+  };
+
+  const handleRoleUpdate = async () => {
+    if (!selectedUserId || !newRole) return;
+
+    try {
+      setRoleUpdateLoading(true);
+      setError('');
+      
+      const response = await apiClient.updateUserRole(selectedUserId, newRole);
+      setSuccessMessage(response.message || 'User role updated successfully!');
+      
+      await loadUsers(); // Reload users to show updated roles
+      setShowRoleDialog(false);
+      setSelectedUserId(null);
+      setSelectedCurrentRole('');
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error: any) {
+      setError(error.message || 'Failed to update user role');
+    } finally {
+      setRoleUpdateLoading(false);
     }
   };
 
@@ -325,9 +362,22 @@ export default function AdminView() {
                       <TableCell className="font-medium">{userItem.name}</TableCell>
                       <TableCell>{userItem.email}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(userItem.role)}`}>
-                          {userItem.role}
-                        </span>
+                        {userItem.id !== user.id ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleRoleChange(userItem.id, userItem.role)}
+                              className={`px-2 py-1 text-xs font-medium rounded-full cursor-pointer hover:opacity-80 transition-opacity ${getRoleBadgeColor(userItem.role)}`}
+                              title="Click to change role"
+                            >
+                              {userItem.role}
+                            </button>
+                            <Edit3 className="w-3 h-3 text-gray-400 hover:text-gray-600 cursor-pointer" />
+                          </div>
+                        ) : (
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(userItem.role)}`}>
+                            {userItem.role}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(userItem.isActive)}`}>
@@ -358,7 +408,7 @@ export default function AdminView() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleAssignManager(userItem.id)}
-                              className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700"
+                              className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-full"
                             >
                               +
                             </Button>
@@ -558,6 +608,87 @@ export default function AdminView() {
               disabled={managerAssignLoading}
             >
               Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Role Dialog */}
+      <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change User Role</DialogTitle>
+            <DialogDescription>
+              Select a new role for this user. Changing from MANAGER role will remove all manager-employee relationships.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Current Role</label>
+              <div className="p-3 bg-gray-50 rounded-md">
+                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(selectedCurrentRole)}`}>
+                  {selectedCurrentRole}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">New Role</label>
+              <select
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as 'ADMIN' | 'MANAGER' | 'EMPLOYEE')}
+                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={roleUpdateLoading}
+              >
+                <option value="EMPLOYEE">Employee</option>
+                <option value="MANAGER">Manager</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+
+            {selectedCurrentRole === 'MANAGER' && newRole !== 'MANAGER' && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800">
+                  <strong>Warning:</strong> Changing from MANAGER role will remove all manager-employee relationships for this user.
+                </p>
+              </div>
+            )}
+
+            {newRole === 'ADMIN' && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-800">
+                  <strong>Caution:</strong> ADMIN role grants full system access including user management and company settings.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowRoleDialog(false);
+                setSelectedUserId(null);
+                setSelectedCurrentRole('');
+              }}
+              disabled={roleUpdateLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRoleUpdate}
+              disabled={roleUpdateLoading || newRole === selectedCurrentRole}
+            >
+              {roleUpdateLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Updating Role...
+                </>
+              ) : (
+                'Update Role'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

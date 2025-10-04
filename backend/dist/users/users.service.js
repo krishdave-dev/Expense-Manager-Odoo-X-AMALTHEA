@@ -374,6 +374,60 @@ let UsersService = class UsersService {
             message: 'Manager removed successfully',
         };
     }
+    async updateUserRole(adminUserId, targetUserId, newRole) {
+        const adminUser = await this.prisma.user.findUnique({
+            where: { id: adminUserId },
+        });
+        if (!adminUser || adminUser.role !== 'ADMIN') {
+            throw new common_1.ForbiddenException('Only admins can update user roles');
+        }
+        if (adminUserId === targetUserId) {
+            throw new common_1.ForbiddenException('You cannot change your own role');
+        }
+        if (!['ADMIN', 'MANAGER', 'EMPLOYEE'].includes(newRole)) {
+            throw new common_1.BadRequestException('Invalid role specified');
+        }
+        const targetUser = await this.prisma.user.findFirst({
+            where: {
+                id: targetUserId,
+                company_id: adminUser.company_id,
+            },
+        });
+        if (!targetUser) {
+            throw new common_1.NotFoundException('User not found in your company');
+        }
+        if (targetUser.role === 'MANAGER' && newRole !== 'MANAGER') {
+            await this.prisma.managerRelation.deleteMany({
+                where: { manager_id: targetUserId },
+            });
+        }
+        const updatedUser = await this.prisma.user.update({
+            where: { id: targetUserId },
+            data: { role: newRole },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                is_active: true,
+                is_temp_password: true,
+                updated_at: true,
+            },
+        });
+        return {
+            message: `User role updated successfully to ${newRole}`,
+            user: {
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                companyId: targetUser.company_id,
+                isActive: updatedUser.is_active,
+                isTempPassword: updatedUser.is_temp_password,
+                updatedAt: updatedUser.updated_at?.toISOString(),
+            },
+        };
+    }
     async getUserManagers(requesterId, userId) {
         const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
         if (!requester) {

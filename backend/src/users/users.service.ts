@@ -421,6 +421,76 @@ export class UsersService {
   }
 
   /**
+   * Update user role (Admin only)
+   */
+  async updateUserRole(adminUserId: number, targetUserId: number, newRole: string) {
+    const adminUser = await this.prisma.user.findUnique({
+      where: { id: adminUserId },
+    });
+
+    if (!adminUser || adminUser.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can update user roles');
+    }
+
+    // Prevent admin from changing their own role
+    if (adminUserId === targetUserId) {
+      throw new ForbiddenException('You cannot change your own role');
+    }
+
+    // Validate role
+    if (!['ADMIN', 'MANAGER', 'EMPLOYEE'].includes(newRole)) {
+      throw new BadRequestException('Invalid role specified');
+    }
+
+    const targetUser = await this.prisma.user.findFirst({
+      where: { 
+        id: targetUserId,
+        company_id: adminUser.company_id,
+      },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundException('User not found in your company');
+    }
+
+    // If changing from MANAGER role, remove all manager-employee relationships
+    if (targetUser.role === 'MANAGER' && newRole !== 'MANAGER') {
+      await this.prisma.managerRelation.deleteMany({
+        where: { manager_id: targetUserId },
+      });
+    }
+
+    // Update the user's role
+    const updatedUser = await this.prisma.user.update({
+      where: { id: targetUserId },
+      data: { role: newRole as any },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        is_active: true,
+        is_temp_password: true,
+        updated_at: true,
+      },
+    });
+
+    return {
+      message: `User role updated successfully to ${newRole}`,
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        companyId: targetUser.company_id,
+        isActive: updatedUser.is_active,
+        isTempPassword: updatedUser.is_temp_password,
+        updatedAt: updatedUser.updated_at?.toISOString(),
+      },
+    };
+  }
+
+  /**
    * Get user's managers
    */
   async getUserManagers(requesterId: number, userId: number) {
