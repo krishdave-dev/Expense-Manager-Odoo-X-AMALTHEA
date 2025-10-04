@@ -23,7 +23,10 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { OCRService, ExtractedExpenseData } from "@/components/services/ocrService";
+import {
+  OCRService,
+  ExtractedExpenseData,
+} from "@/components/services/ocrService";
 
 interface ExpenseEntry {
   id: string;
@@ -109,7 +112,7 @@ export default function UserView() {
   };
 
   const handleNew = () => {
-    router.push('/user/new-expense');
+    router.push("/user/new-expense");
   };
 
   const formatCurrency = (amount: number) => {
@@ -133,14 +136,16 @@ export default function UserView() {
     }
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (files) {
-      const newFiles = Array.from(files).map(file => ({ 
-        file, 
-        isProcessing: true 
+      const newFiles = Array.from(files).map((file) => ({
+        file,
+        isProcessing: true,
       }));
-      
+
       setUploadedFiles((prev) => [...prev, ...newFiles]);
 
       // Process each file with OCR
@@ -148,24 +153,23 @@ export default function UserView() {
         try {
           const fileIndex = uploadedFiles.length + i;
           const ocrData = await ocrService.extractReceiptData(newFiles[i].file);
-          
-          setUploadedFiles((prev) => 
-            prev.map((item, index) => 
-              index === fileIndex 
+
+          setUploadedFiles((prev) =>
+            prev.map((item, index) =>
+              index === fileIndex
                 ? { ...item, ocrData, isProcessing: false }
                 : item
             )
           );
 
           // Show success notification
-          console.log('OCR completed for:', newFiles[i].file.name, ocrData);
-          
+          console.log("OCR completed for:", newFiles[i].file.name, ocrData);
         } catch (error) {
-          console.error('OCR failed for:', newFiles[i].file.name, error);
-          
-          setUploadedFiles((prev) => 
-            prev.map((item, index) => 
-              index === uploadedFiles.length + i 
+          console.error("OCR failed for:", newFiles[i].file.name, error);
+
+          setUploadedFiles((prev) =>
+            prev.map((item, index) =>
+              index === uploadedFiles.length + i
                 ? { ...item, isProcessing: false, hasError: true }
                 : item
             )
@@ -269,7 +273,9 @@ export default function UserView() {
                           {item.file.name}
                         </span>
                         {item.isProcessing && (
-                          <span className="text-xs text-blue-600">Processing...</span>
+                          <span className="text-xs text-blue-600">
+                            Processing...
+                          </span>
                         )}
                       </div>
                       <button
@@ -286,28 +292,33 @@ export default function UserView() {
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           {item.ocrData.amount && (
                             <div>
-                              <span className="font-medium">Amount:</span> ₹{item.ocrData.amount}
+                              <span className="font-medium">Amount:</span> ₹
+                              {item.ocrData.amount}
                             </div>
                           )}
                           {item.ocrData.date && (
                             <div>
-                              <span className="font-medium">Date:</span> {item.ocrData.date}
+                              <span className="font-medium">Date:</span>{" "}
+                              {item.ocrData.date}
                             </div>
                           )}
                           {item.ocrData.vendor && (
                             <div>
-                              <span className="font-medium">Vendor:</span> {item.ocrData.vendor}
+                              <span className="font-medium">Vendor:</span>{" "}
+                              {item.ocrData.vendor}
                             </div>
                           )}
                           {item.ocrData.category && (
                             <div>
-                              <span className="font-medium">Category:</span> {item.ocrData.category}
+                              <span className="font-medium">Category:</span>{" "}
+                              {item.ocrData.category}
                             </div>
                           )}
                         </div>
                         {item.ocrData.description && (
                           <div className="mt-2 text-xs">
-                            <span className="font-medium">Items:</span> {item.ocrData.description}
+                            <span className="font-medium">Items:</span>{" "}
+                            {item.ocrData.description}
                           </div>
                         )}
                         <div className="flex justify-between items-center mt-3">
@@ -327,7 +338,8 @@ export default function UserView() {
 
                     {item.hasError && (
                       <div className="mt-2 text-xs text-red-600">
-                        Failed to process receipt. Please try again or enter manually.
+                        Failed to process receipt. Please try again or enter
+                        manually.
                       </div>
                     )}
                   </div>
@@ -405,16 +417,17 @@ export default function UserView() {
               </TableHeader>
               <TableBody>
                 {expenses.map((expense) => (
-                  <TableRow key={expense.id} className="border-b hover:bg-gray-50">
+                  <TableRow
+                    key={expense.id}
+                    className="border-b hover:bg-gray-50"
+                  >
                     <TableCell className="py-4 px-6 font-medium">
                       {expense.employee}
                     </TableCell>
                     <TableCell className="py-4 px-6">
                       {expense.description}
                     </TableCell>
-                    <TableCell className="py-4 px-6">
-                      {expense.date}
-                    </TableCell>
+                    <TableCell className="py-4 px-6">{expense.date}</TableCell>
                     <TableCell className="py-4 px-6">
                       {expense.category}
                     </TableCell>
@@ -441,11 +454,13 @@ export default function UserView() {
               </TableBody>
             </Table>
           </div>
-          
+
           {expenses.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">No expenses found</p>
-              <p className="text-gray-400 text-sm mt-2">Click &quot;New&quot; to add your first expense</p>
+              <p className="text-gray-400 text-sm mt-2">
+                Click &quot;New&quot; to add your first expense
+              </p>
             </div>
           )}
         </CardContent>
