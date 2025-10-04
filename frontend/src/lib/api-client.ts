@@ -219,6 +219,78 @@ class ApiClient {
     return this.request(`/users/${managerId}/employees`);
   }
 
+  // Admin Expense Management
+  async getAllCompanyExpenses(): Promise<{
+    expenses: any[];
+    total: number;
+  }> {
+    return this.request('/expenses/all');
+  }
+
+  async getExpenseById(expenseId: number): Promise<any> {
+    return this.request(`/expenses/${expenseId}`);
+  }
+
+  async overrideExpenseApproval(expenseId: number, status: 'APPROVED' | 'REJECTED', comments?: string): Promise<{
+    message: string;
+    expense: any;
+  }> {
+    return this.request(`/expenses/${expenseId}/override-approval`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, comments }),
+    });
+  }
+
+  // Approval Flow Management
+  async getApprovalFlows(): Promise<any[]> {
+    return this.request('/approvals/flows');
+  }
+
+  async createApprovalFlow(flowData: any): Promise<{ message: string; flow: any }> {
+    return this.request('/approvals/flows', {
+      method: 'POST',
+      body: JSON.stringify(flowData),
+    });
+  }
+
+  async updateApprovalFlow(flowId: number, flowData: any): Promise<{ message: string; flow: any }> {
+    return this.request(`/approvals/flows/${flowId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(flowData),
+    });
+  }
+
+  async deleteApprovalFlow(flowId: number): Promise<{ message: string }> {
+    return this.request(`/approvals/flows/${flowId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Approval Rules Management
+  async getApprovalRules(): Promise<any[]> {
+    return this.request('/approvals/rules');
+  }
+
+  async createApprovalRule(ruleData: any): Promise<{ message: string; rule: any }> {
+    return this.request('/approvals/rules', {
+      method: 'POST',
+      body: JSON.stringify(ruleData),
+    });
+  }
+
+  async updateApprovalRule(ruleId: number, ruleData: any): Promise<{ message: string; rule: any }> {
+    return this.request(`/approvals/rules/${ruleId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(ruleData),
+    });
+  }
+
+  async deleteApprovalRule(ruleId: number): Promise<{ message: string }> {
+    return this.request(`/approvals/rules/${ruleId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Token management
   setAuthToken(token: string): void {
     if (typeof window !== 'undefined') {

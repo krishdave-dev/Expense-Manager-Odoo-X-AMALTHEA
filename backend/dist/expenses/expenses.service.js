@@ -124,6 +124,147 @@ let ExpensesService = class ExpensesService {
             },
             orderBy: { created_at: 'desc' },
         });
+        return this.transformExpenses(expenses);
+    }
+    async getAllCompanyExpenses(adminUserId) {
+        const adminUser = await this.prisma.user.findUnique({
+            where: { id: adminUserId },
+        });
+        if (!adminUser || adminUser.role !== 'ADMIN') {
+            throw new Error('Only admins can view all company expenses');
+        }
+        const expenses = await this.prisma.expense.findMany({
+            where: { company_id: adminUser.company_id },
+            include: {
+                employee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+                company: {
+                    select: {
+                        id: true,
+                        name: true,
+                        currency_code: true,
+                        currency_symbol: true,
+                    },
+                },
+                approvals: {
+                    include: {
+                        approver: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                role: true,
+                            },
+                        },
+                    },
+                },
+                attachments: true,
+            },
+            orderBy: { created_at: 'desc' },
+        });
+        return {
+            expenses: this.transformExpenses(expenses),
+            total: expenses.length,
+        };
+    }
+    async getExpenseById(expenseId, userId, userRole) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        const expense = await this.prisma.expense.findUnique({
+            where: { id: expenseId },
+            include: {
+                employee: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+                company: {
+                    select: {
+                        id: true,
+                        name: true,
+                        currency_code: true,
+                        currency_symbol: true,
+                    },
+                },
+                approvals: {
+                    include: {
+                        approver: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                role: true,
+                            },
+                        },
+                    },
+                },
+                attachments: true,
+            },
+        });
+        if (!expense) {
+            throw new Error('Expense not found');
+        }
+        if (userRole !== 'ADMIN' && expense.employee_id !== userId) {
+            throw new Error('Access denied: You can only view your own expenses');
+        }
+        if (expense.company_id !== user.company_id) {
+            throw new Error('Access denied: Expense not in your company');
+        }
+        return this.transformExpenses([expense])[0];
+    }
+    async overrideApproval(expenseId, adminUserId, status, comments) {
+        const adminUser = await this.prisma.user.findUnique({
+            where: { id: adminUserId },
+        });
+        if (!adminUser || adminUser.role !== 'ADMIN') {
+            throw new Error('Only admins can override approvals');
+        }
+        const expense = await this.prisma.expense.findUnique({
+            where: { id: expenseId },
+        });
+        if (!expense) {
+            throw new Error('Expense not found');
+        }
+        if (expense.company_id !== adminUser.company_id) {
+            throw new Error('Access denied: Expense not in your company');
+        }
+        const updatedExpense = await this.prisma.expense.update({
+            where: { id: expenseId },
+            data: { status },
+        });
+        await this.prisma.expenseApproval.updateMany({
+            where: {
+                expense_id: expenseId,
+                status: 'PENDING',
+            },
+            data: {
+                status,
+                comments: comments || `Overridden by admin: ${adminUser.name}`,
+                approved_at: new Date(),
+            },
+        });
+        await this.prisma.expenseApproval.create({
+            data: {
+                expense_id: expenseId,
+                approver_id: adminUserId,
+                status,
+                comments: comments || `Admin override: ${status.toLowerCase()}`,
+                approved_at: new Date(),
+                step_order: 999,
+            },
+        });
+        return {
+            message: `Expense ${status.toLowerCase()} by admin override`,
+            expense: updatedExpense,
+        };
+    }
+    transformExpenses(expenses) {
         return expenses.map(expense => ({
             id: expense.id,
             employeeId: expense.employee_id,

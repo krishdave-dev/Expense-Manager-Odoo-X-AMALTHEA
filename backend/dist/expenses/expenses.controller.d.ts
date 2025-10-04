@@ -3,67 +3,107 @@ import { CreateExpenseDto } from './dto/create-expense.dto';
 export declare class ExpensesController {
     private expensesService;
     constructor(expensesService: ExpensesService);
-    create(dto: CreateExpenseDto, req: any): Promise<{
-        date: Date;
-        id: number;
-        company_id: number;
-        created_at: Date;
-        updated_at: Date;
-        currency_code: string;
-        employee_id: number;
-        amount: import("@prisma/client/runtime/library").Decimal;
+    create(dto: CreateExpenseDto, user: any): Promise<{
         category: string | null;
         description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        currency_code: string;
         converted_amount: import("@prisma/client/runtime/library").Decimal | null;
+        date: Date;
         status: import(".prisma/client").$Enums.ExpenseStatus;
-    }>;
-    getMy(req: any): Promise<{
+        created_at: Date;
+        updated_at: Date;
         id: number;
-        employeeId: number;
-        companyId: number;
-        category: string;
-        description: string;
-        amount: string;
-        currencyCode: string;
-        convertedAmount: string;
-        date: string;
-        status: import(".prisma/client").$Enums.ExpenseStatus;
-        createdAt: string;
-        updatedAt: string;
-        employee: {
-            email: string;
-            name: string;
-            id: number;
-        };
+        employee_id: number;
+        company_id: number;
+    }>;
+    getMy(user: any): Promise<{
+        id: any;
+        employeeId: any;
+        companyId: any;
+        category: any;
+        description: any;
+        amount: any;
+        currencyCode: any;
+        convertedAmount: any;
+        date: any;
+        status: any;
+        createdAt: any;
+        updatedAt: any;
+        employee: any;
         company: {
-            id: number;
-            name: string;
-            currencyCode: string;
-            currencySymbol: string;
+            id: any;
+            name: any;
+            currencyCode: any;
+            currencySymbol: any;
         };
-        approvals: {
-            id: number;
-            expenseId: number;
-            approverId: number;
-            stepOrder: number;
-            status: import(".prisma/client").$Enums.ApprovalStatus;
-            comments: string;
-            approvedAt: string;
-            createdAt: string;
-            updatedAt: string;
-            approver: {
-                email: string;
-                name: string;
-                id: number;
-                role: import(".prisma/client").$Enums.Role;
-            };
-        }[];
-        attachments: {
-            id: number;
-            expenseId: number;
-            fileUrl: string;
-            ocrData: import("@prisma/client/runtime/library").JsonValue;
-            createdAt: string;
-        }[];
+        approvals: any;
+        attachments: any;
     }[]>;
+    getAllCompanyExpenses(user: any): Promise<{
+        expenses: {
+            id: any;
+            employeeId: any;
+            companyId: any;
+            category: any;
+            description: any;
+            amount: any;
+            currencyCode: any;
+            convertedAmount: any;
+            date: any;
+            status: any;
+            createdAt: any;
+            updatedAt: any;
+            employee: any;
+            company: {
+                id: any;
+                name: any;
+                currencyCode: any;
+                currencySymbol: any;
+            };
+            approvals: any;
+            attachments: any;
+        }[];
+        total: number;
+    }>;
+    getExpenseById(expenseId: number, user: any): Promise<{
+        id: any;
+        employeeId: any;
+        companyId: any;
+        category: any;
+        description: any;
+        amount: any;
+        currencyCode: any;
+        convertedAmount: any;
+        date: any;
+        status: any;
+        createdAt: any;
+        updatedAt: any;
+        employee: any;
+        company: {
+            id: any;
+            name: any;
+            currencyCode: any;
+            currencySymbol: any;
+        };
+        approvals: any;
+        attachments: any;
+    }>;
+    overrideApproval(expenseId: number, status: 'APPROVED' | 'REJECTED', comments: string, user: any): Promise<{
+        message: string;
+        expense: {
+            category: string | null;
+            description: string | null;
+            amount: import("@prisma/client/runtime/library").Decimal;
+            currency_code: string;
+            converted_amount: import("@prisma/client/runtime/library").Decimal | null;
+            date: Date;
+            status: import(".prisma/client").$Enums.ExpenseStatus;
+            created_at: Date;
+            updated_at: Date;
+            id: number;
+            employee_id: number;
+            company_id: number;
+        };
+    }>;
 }
