@@ -202,6 +202,10 @@ Approve or reject an expense.
 }
 ```
 
+**Example URLs:**
+- `POST /approvals/1/approve` - Approve expense with ID 1
+- `POST /approvals/2/approve` - Approve expense with ID 2
+
 ## 🏗️ System Architecture
 
 ### Database Schema

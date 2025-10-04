@@ -21,18 +21,24 @@ let ApprovalsController = class ApprovalsController {
         this.approvalsService = approvalsService;
     }
     approve(expenseId, dto, req) {
-        const approverId = 2;
+        const approverId = 1;
         return this.approvalsService.approveExpense(+expenseId, approverId, dto);
     }
     getPending(req) {
-        const approverId = 2;
+        const approverId = 1;
         return this.approvalsService.getPendingApprovals(approverId);
+    }
+    async setupApprovalFlow(companyId) {
+        return this.approvalsService.setupDefaultApprovalFlow(+companyId);
+    }
+    async getAllApprovals() {
+        return this.approvalsService.getAllApprovalsDebug();
     }
 };
 exports.ApprovalsController = ApprovalsController;
 __decorate([
-    (0, common_1.Post)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)(':expenseId/approve'),
+    __param(0, (0, common_1.Param)('expenseId')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -46,6 +52,19 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ApprovalsController.prototype, "getPending", null);
+__decorate([
+    (0, common_1.Post)('setup-flow/:companyId'),
+    __param(0, (0, common_1.Param)('companyId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ApprovalsController.prototype, "setupApprovalFlow", null);
+__decorate([
+    (0, common_1.Get)('debug/all'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ApprovalsController.prototype, "getAllApprovals", null);
 exports.ApprovalsController = ApprovalsController = __decorate([
     (0, common_1.Controller)('approvals'),
     __metadata("design:paramtypes", [approvals_service_1.ApprovalsService])

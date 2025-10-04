@@ -37,8 +37,8 @@ export declare class ExpensesService {
             created_at: Date;
             updated_at: Date;
             id: number;
-            status: import(".prisma/client").$Enums.ApprovalStatus;
             step_order: number | null;
+            status: import(".prisma/client").$Enums.ApprovalStatus;
             comments: string | null;
             approved_at: Date | null;
             expense_id: number;
