@@ -1,5 +1,5 @@
-import React from 'react'
-import CreateUserTable from '@/components/admin/createuser/CreateUserTable'
+import React from "react";
+import CreateUserTable from "@/components/admin/createuser/CreateUserTable";
 
 export default function CreateUserPage() {
   return (
@@ -10,8 +10,8 @@ export default function CreateUserPage() {
           Create and manage users in your organization
         </p>
       </div>
-      
+
       <CreateUserTable />
     </div>
-  )
+  );
 }

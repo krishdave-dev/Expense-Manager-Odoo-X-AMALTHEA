@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,49 +11,76 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { UserCheck, Users, Percent } from 'lucide-react'
+} from "@/components/ui/table";
+import { UserCheck, Users, Percent } from "lucide-react";
 
 interface Approver {
-  id: string
-  name: string
-  email: string
-  required: boolean
+  id: string;
+  name: string;
+  email: string;
+  required: boolean;
 }
 
 export default function RightSection() {
-  const [isManagerApprover, setIsManagerApprover] = useState(false)
-  const [approveSequence, setApproveSequence] = useState(false)
-  const [minApprovalPercentage, setMinApprovalPercentage] = useState('')
-  const [approvers, setApprovers] = useState<Approver[]>([])
+  const [isManagerApprover, setIsManagerApprover] = useState(false);
+  const [approveSequence, setApproveSequence] = useState(false);
+  const [minApprovalPercentage, setMinApprovalPercentage] = useState("");
+  const [approvers, setApprovers] = useState<Approver[]>([]);
 
   // Mock approvers data (in real app, fetch from backend)
   useEffect(() => {
     const mockApprovers: Approver[] = [
-      { id: '1', name: 'Alice Cooper', email: 'alice.cooper@company.com', required: true },
-      { id: '2', name: 'Bob Johnson', email: 'bob.johnson@company.com', required: false },
-      { id: '3', name: 'Carol Smith', email: 'carol.smith@company.com', required: true },
-      { id: '4', name: 'David Lee', email: 'david.lee@company.com', required: false },
-      { id: '5', name: 'Eva Martinez', email: 'eva.martinez@company.com', required: true }
-    ]
-    setApprovers(mockApprovers)
-  }, [])
+      {
+        id: "1",
+        name: "Alice Cooper",
+        email: "alice.cooper@company.com",
+        required: true,
+      },
+      {
+        id: "2",
+        name: "Bob Johnson",
+        email: "bob.johnson@company.com",
+        required: false,
+      },
+      {
+        id: "3",
+        name: "Carol Smith",
+        email: "carol.smith@company.com",
+        required: true,
+      },
+      {
+        id: "4",
+        name: "David Lee",
+        email: "david.lee@company.com",
+        required: false,
+      },
+      {
+        id: "5",
+        name: "Eva Martinez",
+        email: "eva.martinez@company.com",
+        required: true,
+      },
+    ];
+    setApprovers(mockApprovers);
+  }, []);
 
   const handleRequiredChange = (approverId: string, required: boolean) => {
-    setApprovers(approvers.map(approver => 
-      approver.id === approverId ? { ...approver, required } : approver
-    ))
-  }
+    setApprovers(
+      approvers.map((approver) =>
+        approver.id === approverId ? { ...approver, required } : approver
+      )
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Right Section Data:', {
+    e.preventDefault();
+    console.log("Right Section Data:", {
       isManagerApprover,
       approvers,
       approveSequence,
-      minApprovalPercentage
-    })
-  }
+      minApprovalPercentage,
+    });
+  };
 
   return (
     <Card className="h-fit">
@@ -76,7 +103,7 @@ export default function RightSection() {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Approvers Table */}
@@ -85,9 +112,13 @@ export default function RightSection() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
-                    <TableHead className="w-16 text-center font-semibold">Sr No.</TableHead>
+                    <TableHead className="w-16 text-center font-semibold">
+                      Sr No.
+                    </TableHead>
                     <TableHead className="font-semibold">User</TableHead>
-                    <TableHead className="w-24 text-center font-semibold">Required</TableHead>
+                    <TableHead className="w-24 text-center font-semibold">
+                      Required
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -98,15 +129,21 @@ export default function RightSection() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium text-gray-900">{approver.name}</div>
-                          <div className="text-sm text-gray-500">{approver.email}</div>
+                          <div className="font-medium text-gray-900">
+                            {approver.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {approver.email}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <input
                           type="checkbox"
                           checked={approver.required}
-                          onChange={(e) => handleRequiredChange(approver.id, e.target.checked)}
+                          onChange={(e) =>
+                            handleRequiredChange(approver.id, e.target.checked)
+                          }
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                       </TableCell>
@@ -115,12 +152,14 @@ export default function RightSection() {
                 </TableBody>
               </Table>
             </div>
-            
+
             {approvers.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>No approvers found</p>
-                <p className="text-sm">Add users to the system to see them here</p>
+                <p className="text-sm">
+                  Add users to the system to see them here
+                </p>
               </div>
             )}
           </div>
@@ -134,7 +173,10 @@ export default function RightSection() {
               onChange={(e) => setApproveSequence(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="approveSequence" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <label
+              htmlFor="approveSequence"
+              className="text-sm font-medium text-gray-700 flex items-center gap-2"
+            >
               <UserCheck className="h-4 w-4" />
               Approve Sequence
             </label>
@@ -160,10 +202,13 @@ export default function RightSection() {
                 className="pr-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 required
               />
-              <span className="absolute right-3 top-3 text-gray-400 text-sm">%</span>
+              <span className="absolute right-3 top-3 text-gray-400 text-sm">
+                %
+              </span>
             </div>
             <p className="text-xs text-gray-500">
-              Minimum percentage of approvers required to approve an expense (0-100%)
+              Minimum percentage of approvers required to approve an expense
+              (0-100%)
             </p>
           </div>
 
@@ -179,5 +224,5 @@ export default function RightSection() {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

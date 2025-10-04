@@ -1,50 +1,50 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { User, FileText, UserCheck } from 'lucide-react'
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { User, FileText, UserCheck } from "lucide-react";
 
 interface Manager {
-  id: string
-  name: string
-  email: string
+  id: string;
+  name: string;
+  email: string;
 }
 
 export default function LeftSection() {
-  const [userName, setUserName] = useState('')
-  const [description, setDescription] = useState('')
-  const [selectedManager, setSelectedManager] = useState('')
-  const [managers, setManagers] = useState<Manager[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [userName, setUserName] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedManager, setSelectedManager] = useState("");
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Mock managers data (in real app, fetch from backend)
   useEffect(() => {
     const mockManagers: Manager[] = [
-      { id: '1', name: 'John Smith', email: 'john.smith@company.com' },
-      { id: '2', name: 'Sarah Johnson', email: 'sarah.johnson@company.com' },
-      { id: '3', name: 'Michael Brown', email: 'michael.brown@company.com' },
-      { id: '4', name: 'Emily Davis', email: 'emily.davis@company.com' },
-      { id: '5', name: 'David Wilson', email: 'david.wilson@company.com' }
-    ]
-    setManagers(mockManagers)
-  }, [])
+      { id: "1", name: "John Smith", email: "john.smith@company.com" },
+      { id: "2", name: "Sarah Johnson", email: "sarah.johnson@company.com" },
+      { id: "3", name: "Michael Brown", email: "michael.brown@company.com" },
+      { id: "4", name: "Emily Davis", email: "emily.davis@company.com" },
+      { id: "5", name: "David Wilson", email: "david.wilson@company.com" },
+    ];
+    setManagers(mockManagers);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    
+    e.preventDefault();
+    setIsLoading(true);
+
     // Simulate API call
     setTimeout(() => {
-      console.log('Left Section Data:', {
+      console.log("Left Section Data:", {
         userName,
         description,
-        selectedManager
-      })
-      setIsLoading(false)
-    }, 1000)
-  }
+        selectedManager,
+      });
+      setIsLoading(false);
+    }, 1000);
+  };
 
   return (
     <Card className="h-fit">
@@ -54,7 +54,7 @@ export default function LeftSection() {
           User Configuration
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* User Name Field */}
@@ -129,5 +129,5 @@ export default function LeftSection() {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
